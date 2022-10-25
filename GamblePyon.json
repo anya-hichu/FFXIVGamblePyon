@@ -1,4 +1,4 @@
-{
+[{
   "Author": "Pyon",
   "Name": "GamblePyon",
   "Punchline": "Helper plugin for Blackjack",
@@ -16,4 +16,4 @@
   "DownloadLinkInstall": "https://github.com/priprii/FFXIVGamblePyon/raw/main/bin/GamblePyon.zip",
   "DownloadLinkTesting": "https://github.com/priprii/FFXIVGamblePyon/raw/main/bin/GamblePyon.zip",
   "DownloadLinkUpdate": "https://github.com/priprii/FFXIVGamblePyon/raw/main/bin/GamblePyon.zip"
-}
+}]
