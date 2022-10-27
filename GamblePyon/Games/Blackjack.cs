@@ -21,38 +21,37 @@ namespace GamblePyon.Games {
         private enum Event { PlaceBets, BetsPlaced, CardActions }
 
         private Player CurrentPlayer;
-        public Player Dealer = new Player();
-        public List<Player> Players = new List<Player>() {
-            new Player(){ ID = 0 },
-            new Player(){ ID = 1 },
-            new Player(){ ID = 2 },
-            new Player(){ ID = 3 },
-            new Player(){ ID = 4 },
-            new Player(){ ID = 5 },
-            new Player(){ ID = 6 }
-        };
+        public Player Dealer;
+        public List<Player> Players;
 
-        public Blackjack() {
+        public Blackjack() { }
+
+        public void Initialize() {
+            Dealer = new Player(0);
             Dealer.Name = GamblePyon.ClientState.LocalPlayer.Name.TextValue;
+            Dealer.Alias = Dealer.GetName(Config.AutoNameMode);
+            InitializePlayers();
+        }
+
+        public void InitializePlayers() {
+            Players = new List<Player>();
+            if(Config.ChatChannel != "/p" || !Config.AutoParty) {
+                Players.Add(new Player(0));
+                Players.Add(new Player(1));
+                Players.Add(new Player(2));
+                Players.Add(new Player(3));
+                Players.Add(new Player(4));
+                Players.Add(new Player(5));
+                Players.Add(new Player(6));
+            }
         }
 
         public void ResetRound() {
             EndRound();
-            Dealer.Bet = 0;
-            Dealer.Blackjack.AceLowValue = 0;
-            Dealer.Blackjack.AceHighValue = 0;
-            Dealer.Blackjack.Cards = new List<Card>();
+            Dealer.Reset();
 
             foreach(Player player in Players) {
-                player.Bet = player.Blackjack.Pushed ? player.Bet : 0;
-                player.Winnings = 0;
-                player.Blackjack.AceLowValue = 0;
-                player.Blackjack.AceHighValue = 0;
-                player.Blackjack.Doubled = false;
-                player.Blackjack.DoubleHit = false;
-                player.Blackjack.IsPush = player.Blackjack.Pushed;
-                player.Blackjack.Pushed = false;
-                player.Blackjack.Cards = new List<Card>();
+                player.Reset();
             }
         }
 
@@ -185,31 +184,34 @@ namespace GamblePyon.Games {
             ImGui.InputText($"###dealerName", ref Dealer.Name, 255);
             if(ImGui.IsItemHovered()) { ImGui.SetTooltip("This is you! ..Or at least it should be.\nI dunno what would happen if it's not."); }
 
-            ImGui.Columns(8);
-            ImGui.SetColumnWidth(0, 90 + 5 * ImGuiHelpers.GlobalScale);
-            ImGui.SetColumnWidth(1, 80 + 5 * ImGuiHelpers.GlobalScale);
-            ImGui.SetColumnWidth(2, 75 + 5 * ImGuiHelpers.GlobalScale);
-            ImGui.SetColumnWidth(3, 80 + 5 * ImGuiHelpers.GlobalScale);
-            ImGui.SetColumnWidth(4, 90 + 5 * ImGuiHelpers.GlobalScale);
-            ImGui.SetColumnWidth(5, 50 + 5 * ImGuiHelpers.GlobalScale);
-            ImGui.SetColumnWidth(6, 90 + 5 * ImGuiHelpers.GlobalScale);
-            ImGui.SetColumnWidth(7, 80 + 5 * ImGuiHelpers.GlobalScale);
+            ImGui.Columns(9);
+            ImGui.SetColumnWidth(0, 55 + 5 * ImGuiHelpers.GlobalScale); //Order
+            ImGui.SetColumnWidth(1, 90 + 5 * ImGuiHelpers.GlobalScale); //Alias
+            ImGui.SetColumnWidth(2, 80 + 5 * ImGuiHelpers.GlobalScale); //Bet
+            ImGui.SetColumnWidth(3, 65 + 5 * ImGuiHelpers.GlobalScale); //Bet Actions
+            ImGui.SetColumnWidth(4, 65 + 5 * ImGuiHelpers.GlobalScale); //Card Actions
+            ImGui.SetColumnWidth(5, 80 + 5 * ImGuiHelpers.GlobalScale); //Cards
+            ImGui.SetColumnWidth(6, 45 + 5 * ImGuiHelpers.GlobalScale); //Value
+            ImGui.SetColumnWidth(7, 65 + 5 * ImGuiHelpers.GlobalScale); //Result
+            ImGui.SetColumnWidth(8, 80 + 5 * ImGuiHelpers.GlobalScale); //Profit
 
             ImGui.Separator();
 
+            ImGui.Text("");
+            ImGui.NextColumn();
             ImGui.Text("Alias");
             ImGui.NextColumn();
             ImGui.Text("Total Bet");
             ImGui.NextColumn();
-            ImGui.Text("Bet Actions");
+            ImGui.Text(" Bet "); //BET
             ImGui.NextColumn();
-            ImGui.Text("Card Actions");
+            ImGui.Text(" Card "); //CARD
             ImGui.NextColumn();
             ImGui.Text("Cards");
             ImGui.NextColumn();
             ImGui.Text("Value");
             ImGui.NextColumn();
-            ImGui.Text("Result Actions");
+            ImGui.Text(" Result "); //Result
             ImGui.NextColumn();
             ImGui.Text("Profit");
             ImGui.NextColumn();
@@ -218,10 +220,14 @@ namespace GamblePyon.Games {
 
             ImGui.PushID($"dealer");
 
+            //Order
+            ImGui.SetNextItemWidth(-1);
+            ImGui.NextColumn();
+
             //Alias
             ImGui.SetNextItemWidth(-1);
             ImGui.InputText($"###dealerAlias", ref Dealer.Alias, 255);
-            if(ImGui.IsItemHovered()) { ImGui.SetTooltip("A name to refer to the dealer by, does not need to be your full name."); }
+            if(ImGui.IsItemHovered()) { ImGui.SetTooltip("A name to refer to the dealer by, does not need to be your full name.\nThis should be set automatically, but you can change it if you want a cooler name."); }
             ImGui.NextColumn();
 
             //Bet
@@ -319,31 +325,34 @@ namespace GamblePyon.Games {
             //ImGuiComponents.IconButton(FontAwesomeIcon.AngleDown))
             ImGui.TextColored(ImGuiColors.DalamudGrey, "Players");
 
-            ImGui.Columns(8);
-            ImGui.SetColumnWidth(0, 90 + 5 * ImGuiHelpers.GlobalScale);
-            ImGui.SetColumnWidth(1, 80 + 5 * ImGuiHelpers.GlobalScale);
-            ImGui.SetColumnWidth(2, 75 + 5 * ImGuiHelpers.GlobalScale);
-            ImGui.SetColumnWidth(3, 80 + 5 * ImGuiHelpers.GlobalScale);
-            ImGui.SetColumnWidth(4, 90 + 5 * ImGuiHelpers.GlobalScale);
-            ImGui.SetColumnWidth(5, 50 + 5 * ImGuiHelpers.GlobalScale);
-            ImGui.SetColumnWidth(6, 90 + 5 * ImGuiHelpers.GlobalScale);
-            ImGui.SetColumnWidth(7, 80 + 5 * ImGuiHelpers.GlobalScale);
+            ImGui.Columns(9);
+            ImGui.SetColumnWidth(0, 55 + 5 * ImGuiHelpers.GlobalScale); //Order
+            ImGui.SetColumnWidth(1, 90 + 5 * ImGuiHelpers.GlobalScale); //Alias
+            ImGui.SetColumnWidth(2, 80 + 5 * ImGuiHelpers.GlobalScale); //Bet
+            ImGui.SetColumnWidth(3, 65 + 5 * ImGuiHelpers.GlobalScale); //Bet Actions
+            ImGui.SetColumnWidth(4, 65 + 5 * ImGuiHelpers.GlobalScale); //Card Actions
+            ImGui.SetColumnWidth(5, 80 + 5 * ImGuiHelpers.GlobalScale); //Cards
+            ImGui.SetColumnWidth(6, 45 + 5 * ImGuiHelpers.GlobalScale); //Value
+            ImGui.SetColumnWidth(7, 65 + 5 * ImGuiHelpers.GlobalScale); //Result
+            ImGui.SetColumnWidth(8, 80 + 5 * ImGuiHelpers.GlobalScale); //Profit
 
             ImGui.Separator();
 
+            ImGui.Text("Order");
+            ImGui.NextColumn();
             ImGui.Text("Alias");
             ImGui.NextColumn();
             ImGui.Text("Bet Amount");
             ImGui.NextColumn();
-            ImGui.Text("Bet Actions");
+            ImGui.Text(" Bet "); //BET
             ImGui.NextColumn();
-            ImGui.Text("Card Actions");
+            ImGui.Text(" Card "); //CARD
             ImGui.NextColumn();
             ImGui.Text("Cards");
             ImGui.NextColumn();
             ImGui.Text("Value");
             ImGui.NextColumn();
-            ImGui.Text("Result Actions");
+            ImGui.Text(" Result "); //Result
             ImGui.NextColumn();
             ImGui.Text("Profit");
             ImGui.NextColumn();
@@ -352,10 +361,41 @@ namespace GamblePyon.Games {
                 ImGui.Separator();
                 ImGui.PushID($"player_{player.ID}");
 
+                //Order
+                ImGui.SetNextItemWidth(-1);
+                if(Players.Count > 1) {
+                    int index = Players.IndexOf(player);
+
+                    if(index != 0) {
+                        if(ImGui.Button("↑###orderUp")) {
+                            Player p = Players[index - 1];
+                            Players[index - 1] = player;
+                            Players[index] = p;
+                        }
+                        if(ImGui.IsItemHovered()) {
+                            ImGui.SetTooltip("Move this player up the list.");
+                        }
+                    } else {
+                        ImGui.Dummy(new System.Numerics.Vector2(20, 10));
+                    }
+                    ImGui.SameLine();
+                    if(index != Players.Count - 1) {
+                        if(ImGui.Button("↓###orderDown")) {
+                            Player p = Players[index + 1];
+                            Players[index + 1] = player;
+                            Players[index] = p;
+                        }
+                        if(ImGui.IsItemHovered()) {
+                            ImGui.SetTooltip("Move this player down the list.");
+                        }
+                    }
+                }
+                ImGui.NextColumn();
+
                 //Name
                 ImGui.SetNextItemWidth(-1);
                 ImGui.InputText($"###playerAlias", ref player.Alias, 255);
-                if(ImGui.IsItemHovered()) { ImGui.SetTooltip("A name to refer to this player by, does not need to be their full name.\nLeave blank if the seat is free."); }
+                if(ImGui.IsItemHovered()) { ImGui.SetTooltip("A name to refer to this player by, does not need to be their full name.\nLeave blank if the seat is free.\nYou do not need to touch this if 'Auto Party' is enabled.. you can if you REALLY want to though."); }
                 ImGui.NextColumn();
 
                 //Bet Amount
@@ -546,7 +586,7 @@ namespace GamblePyon.Games {
             ImGui.SetNextItemWidth(-1);
             ImGuiEx.Checkbox($"Auto Double", Config.Blackjack, nameof(Config.Blackjack.AutoDouble));
             if(ImGui.IsItemHovered()) {
-                ImGui.SetTooltip("Automatically double bet amount when clicking Double button.\nProbably never have to uncheck this.\n..unless you enjoy typing numbers yourself, nerd.");
+                ImGui.SetTooltip("Automatically double bet amount when clicking Double button.\nProbably never have to uncheck this.\n..unless you enjoy typing numbers yourself, I won't judge.");
             }
             ImGui.NextColumn();
 
@@ -812,47 +852,49 @@ namespace GamblePyon.Games {
         }
 
         public void DrawGuide() {
-            ImGui.TextColored(ImGuiColors.DalamudGrey, "How to be a Cute Dealer in 13 Easy Steps");
+            ImGui.TextColored(ImGuiColors.DalamudGrey, "Initial Setup");
             ImGui.Separator();
             ImGui.TextWrapped("1. This plugin supports public play in /say chat as well as private /party play, this can be adjusted from the 'Main Config' tab. The default & recommended is /party play to avoid spamming public channels.");
             ImGui.Separator();
             ImGui.TextWrapped("2. On the Blackjack 'Config' tab, you can adjust game rules & customize what messages are output to chat for various events, you can also leave a message blank to output nothing for a specific event.");
             ImGui.Separator();
-            ImGui.TextWrapped("3. On the Blackjack 'Game' tab, ensure the 'Enable' checkbox is checked, the Dealer Name is your own name (automatically set).\n'Alias' is a name you want the plugin to refer to you as, you will also have to manually set this for the participating players, doesn't have to be their full name.\nWhen a player is finished playing, you can simply delete their name & profit values to reset their seat.\nThe game logic also supports having players sit out a round, just keep their bet amount at 0 to ignore their seat.");
+            ImGui.TextWrapped("3. On the Blackjack 'Game' tab, ensure the 'Enable' checkbox is checked, the Dealer Name is your own name (automatically set).\n'Alias' is a name you want the plugin to refer to you by, you may also have to manually set this for the participating players if you're not playing in party with 'Auto Party' enabled in 'Main Config'.\nWhen a player is finished playing, you can simply delete their name & profit values to reset their seat (this is done automatically with 'Auto Party' enabled).\nThe game logic also supports having players sit out a round, just keep their bet amount at 0 to ignore their seat.");
             ImGui.Separator();
-            ImGui.TextWrapped("4. When everyone's name has been set, you can start a round by pressing the 'B' button in Dealer 'Bet Actions', this will send a message informing players that the round is starting & they'll need to place bets.");
+            ImGui.TextColored(ImGuiColors.DalamudGrey, "How to be a Cute Dealer in 10 Easy Steps!");
             ImGui.Separator();
-            ImGui.TextWrapped("5. Trade each player for their bet amount & manually add it to their 'Bet Amount' field, press the 'B' button in Player 'Bet Actions' to announce their bet amount.");
+            ImGui.TextWrapped("1. When ready, you can start a round by pressing the 'B' button in Dealer  Bet , this will send a message informing players that the round is starting & they'll need to place bets.");
             ImGui.Separator();
-            ImGui.TextWrapped("6. Press the 'F' button in Dealer 'Bet Actions' to announce all bets have been placed.");
+            ImGui.TextWrapped("2. Trade each player for their bet amount & manually add it to their 'Bet Amount' field, press the 'B' button in Player  Bet  to announce their bet amount.");
             ImGui.Separator();
-            ImGui.TextWrapped("7. For each player, press the '1' & '2' button in Player 'Card Actions' to draw 1st & 2nd card in turn.");
+            ImGui.TextWrapped("3. Press the 'F' button in Dealer  Bet  to announce all bets have been placed.");
             ImGui.Separator();
-            ImGui.TextWrapped("8. Press the '1' button in Dealer 'Card Actions' to draw 1st dealer card, do not draw 2nd dealer card yet.");
+            ImGui.TextWrapped("4. For each player, press the '1' & '2' button in Player  Card  to draw 1st & 2nd card in turn.");
             ImGui.Separator();
-            ImGui.TextWrapped("9. For each player, press the '?' button in Player 'Card Actions' to request them to Stand/Hit/Double.");
+            ImGui.TextWrapped("5. Press the '1' button in Dealer  Card  to draw 1st dealer card, do not draw 2nd dealer card yet.");
             ImGui.Separator();
-            ImGui.TextWrapped(" - Hit: Press the 'H' button in Player 'Card Actions' to draw another card, then request them to Hit/Stand if they don't bust.");
+            ImGui.TextWrapped("6. For each player, press the '?' button in Player  Card  to request them to Stand/Hit/Double.");
             ImGui.Separator();
-            ImGui.TextWrapped(" - Double: Trade the player for their bet amount again, then press the 'D' button in Player 'Bet Actions' to announce it & automatically update their 'Bet Amount' field, then request them to Hit/Stand.");
+            ImGui.TextWrapped(" - Hit: Press the 'H' button in Player  Card  to draw another card, then request them to Hit/Stand if they don't bust.");
+            ImGui.Separator();
+            ImGui.TextWrapped(" - Double: Trade the player for their bet amount again, then press the 'D' button in Player  Bet  to announce it & automatically update their 'Bet Amount' field, then request them to Hit/Stand.");
             ImGui.Separator();
             ImGui.TextWrapped(" - Stand: No action required, move on to the next player.");
             ImGui.Separator();
-            ImGui.TextWrapped("10. When all players have either stood or bust, press the '2' button in Dealer 'Card Actions' to draw 2nd dealer card.");
+            ImGui.TextWrapped("7. When all players have either stood or bust, press the '2' button in Dealer  Card  to draw 2nd dealer card.");
             ImGui.Separator();
-            ImGui.TextWrapped("11. While dealer hand is under 17, press the 'H' button in Dealer 'Card Actions' to continue drawing.");
+            ImGui.TextWrapped("8. While dealer hand is under 17, press the 'H' button in Dealer  Card  to continue drawing.");
             ImGui.Separator();
-            ImGui.TextWrapped("12. Win/Loss states are calculated automatically, press either of W/L/D buttons in Result Actions.");
+            ImGui.TextWrapped("9. Win/Loss states are calculated automatically, press either of W/L/D buttons in  Result .");
             ImGui.Separator();
             ImGui.TextWrapped(" - Win: (Dealer) - Available if all players have lost/drawn and announces as such.");
             ImGui.Separator();
             ImGui.TextWrapped(" - Win: (Player) - Available if player beats dealer hand or dealer bust. Calculate & announce winnings which should be traded to them. This will also tally total wins/losses in the 'Profits' field for both player & dealer.");
             ImGui.Separator();
-            ImGui.TextWrapped(" - Draw: (Player) - Available if player matches dealer hand. Request Push/Refund, if they push click the checkbox to the right of the 'D' button. When a new round is started, their bet will be automatically set, press the 'P' button in 'Bet Actions' to announce their bet as a pushed bet that round.");
+            ImGui.TextWrapped(" - Draw: (Player) - Available if player matches dealer hand. Request Push/Refund, if they push click the checkbox to the right of the 'D' button. When a new round is started, their bet will be automatically set, press the 'P' button in Player  Bet  to announce their bet as a pushed bet that round.");
             ImGui.Separator();
             ImGui.TextWrapped(" - Loss: (Player) - Available if player is lower than dealer hand or bust. Tally total wins/losses in the 'Profits' field for both dealer & player, by default a loss is not announced as the loss message is blank.");
             ImGui.Separator();
-            ImGui.TextWrapped("13. A new round can be started by pressing the 'B' button again in Dealer 'Bet Actions', automatically resetting cards & bet amounts (other than push).\nThe 'Reset' button can also be used to do the same thing, without announcing a new round starting.");
+            ImGui.TextWrapped("10. A new round can be started by pressing the 'B' button again in Dealer  Bet , automatically resetting cards & bet amounts (other than push).\nThe 'Reset' button can also be used to do the same thing, without announcing a new round starting.");
             ImGui.Separator();
         }
     }

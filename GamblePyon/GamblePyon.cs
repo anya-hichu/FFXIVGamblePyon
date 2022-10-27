@@ -5,16 +5,21 @@ using Dalamud.Game.Gui;
 using Dalamud.Interface.Windowing;
 using XivCommon;
 using Dalamud.Game.ClientState;
+using Dalamud.Game;
+using Dalamud.Game.ClientState.Objects;
 
 namespace GamblePyon {
     public sealed class GamblePyon : IDalamudPlugin {
         public string Name => "GamblePyon";
         private const string CommandName = "/pyon";
 
-        [PluginService] public static DalamudPluginInterface PluginInterface { get; private set; }
-        [PluginService] public static CommandManager CommandManager { get; private set; }
-        [PluginService] public static ChatGui ChatGui { get; private set; }
-        [PluginService] public static ClientState ClientState { get; private set; }
+        [PluginService] public static DalamudPluginInterface PluginInterface { get; private set; } = null!;
+        [PluginService] public static CommandManager CommandManager { get; private set; } = null!;
+        [PluginService] public static ChatGui ChatGui { get; private set; } = null!;
+        [PluginService] public static ClientState ClientState { get; private set; } = null!;
+        [PluginService] public static Framework Framework { get; private set; } = null!;
+        [PluginService] public static ObjectTable Objects { get; private set; } = null!;
+        [PluginService] public static SigScanner SigScanner { get; private set; } = null!;
 
         private WindowSystem Windows;
         private static MainWindow MainWindow;
@@ -44,6 +49,7 @@ namespace GamblePyon {
         public void Dispose() {
             PluginInterface.UiBuilder.Draw -= Windows.Draw;
             ChatGui.ChatMessage -= MainWindow.OnChatMessage;
+            if(MainWindow.PartyManager != null) { MainWindow.PartyManager.Dispose(); }
             CommandManager.RemoveHandler(CommandName);
             XIVCommon.Dispose();
         }

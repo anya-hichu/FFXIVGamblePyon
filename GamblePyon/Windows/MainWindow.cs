@@ -6,7 +6,6 @@ using Dalamud.Interface.Windowing;
 using ImGuiNET;
 
 using GamblePyon.Games;
-using Dalamud.Interface.Colors;
 using GamblePyon.Extensions;
 
 namespace GamblePyon {
@@ -22,11 +21,12 @@ namespace GamblePyon {
 
         private string Messages = "";
 
+        public PartyManager PartyManager;
         private Blackjack Blackjack;
 
         public MainWindow(GamblePyon plugin) : base("GamblePyon") {
             this.SizeCondition = ImGuiCond.Appearing;
-            this.Size = new Vector2(680, 500) * ImGuiHelpers.GlobalScale;
+            this.Size = new Vector2(670, 500) * ImGuiHelpers.GlobalScale;
             this.plugin = plugin;
         }
 
@@ -35,6 +35,7 @@ namespace GamblePyon {
                 Blackjack = new Blackjack();
                 Blackjack.Config = Config;
                 Blackjack.Send_Message += Blackjack_SendMessage;
+                Blackjack.Initialize();
             }
 
             base.OnOpen();
@@ -96,6 +97,16 @@ namespace GamblePyon {
                 GamblePyon.XIVCommon.Functions.Chat.SendMessage(QueuedMessages[0]);
                 QueuedMessages.RemoveAt(0);
             }
+
+            if(Config.ChatChannel == "/p" && Config.AutoParty) {
+                if(Blackjack != null && Blackjack.Players != null) {
+                    if(PartyManager == null) {
+                        PartyManager = new PartyManager();
+                    }
+
+                    PartyManager.UpdatePlayers(ref Blackjack.Players, Blackjack.Dealer, Config.AutoNameMode);
+                }
+            }
         }
 
         private void DrawMainTabs() {
@@ -121,6 +132,7 @@ namespace GamblePyon {
             if(ImGui.RadioButton("Party", Config.ChatChannel == "/p")) {
                 Config.ChatChannel = "/p";
                 Config.RollCommand = "/dice";
+                Blackjack.InitializePlayers();
             }
             if(ImGui.IsItemHovered()) {
                 ImGui.SetTooltip("Play in private /p chat using /dice roll.");
@@ -129,9 +141,42 @@ namespace GamblePyon {
             if(ImGui.RadioButton("Say", Config.ChatChannel == "/s")) {
                 Config.ChatChannel = "/s";
                 Config.RollCommand = "/random";
+                Blackjack.InitializePlayers();
             }
             if(ImGui.IsItemHovered()) {
                 ImGui.SetTooltip("Play in public /s chat using /random roll.");
+            }
+
+            ImGui.Separator();
+            if(ImGuiEx.Checkbox("Auto Party", Config, nameof(Config.AutoParty))) {
+                Blackjack.InitializePlayers();
+            }
+            if(ImGui.IsItemHovered()) {
+                ImGui.SetTooltip("Automatically update participating players by monitoring the party list.\nThis of course is only available while playing in Party.\nI haven't tested whether this works, because I didn't have a party while making this ;w;\nProbably does work though, fingers crossed!!");
+            }
+            ImGui.SameLine();
+            if(ImGui.RadioButton("First Name", Config.AutoNameMode == NameMode.First)) {
+                Config.AutoNameMode = NameMode.First;
+                if(Config.AutoParty) { Blackjack.InitializePlayers(); }
+            }
+            if(ImGui.IsItemHovered()) {
+                ImGui.SetTooltip("With Auto Party enabled, Alias of players will be set to their first name.");
+            }
+            ImGui.SameLine();
+            if(ImGui.RadioButton("Last Name", Config.AutoNameMode == NameMode.Last)) {
+                Config.AutoNameMode = NameMode.Last;
+                if(Config.AutoParty) { Blackjack.InitializePlayers(); }
+            }
+            if(ImGui.IsItemHovered()) {
+                ImGui.SetTooltip("With Auto Party enabled, Alias of players will be set to their last name.\nBit weird to refer to people by their last name only, isn't it?\nSome people call me Pyon, so I guess it's not too weird.");
+            }
+            ImGui.SameLine();
+            if(ImGui.RadioButton("Both", Config.AutoNameMode == NameMode.Both)) {
+                Config.AutoNameMode = NameMode.Both;
+                if(Config.AutoParty) { Blackjack.InitializePlayers(); }
+            }
+            if(ImGui.IsItemHovered()) {
+                ImGui.SetTooltip("With Auto Party enabled, Alias of players will be set to both their first & last name.");
             }
 
             ImGui.Separator();
