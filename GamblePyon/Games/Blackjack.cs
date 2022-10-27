@@ -67,7 +67,7 @@ namespace GamblePyon.Games {
                 .Replace("#bet#", player.Bet.ToString("N0"))
                 .Replace("#cards#", player.Blackjack.GetCards())
                 .Replace("#value#", player.Blackjack.AceLowValue != 0 ? (player.Blackjack.AceHighValue < 21 ? $"{player.Blackjack.AceLowValue}/{player.Blackjack.AceHighValue}" : player.Blackjack.AceHighValue == 21 ? $"{player.Blackjack.AceHighValue}" : $"{player.Blackjack.AceLowValue}") : player.Blackjack.GetStrValue())
-                .Replace("#stand#", Config.Blackjack.DealerStandsOn.ToString())
+                .Replace("#stand#", Config.Blackjack.DealerStandMode == DealerStandMode._16 ? "16" : Config.Blackjack.DealerStandMode == DealerStandMode._17 ? "17" : "None")
                 .Replace("#winnings#", player.Winnings.ToString("N0"))
                 .Replace("#profit#", player.TotalWinnings.ToString("N0"))
                 .Replace("#minbet#", Config.Blackjack.MinBet.ToString("N0"))
@@ -87,6 +87,8 @@ namespace GamblePyon.Games {
         }
 
         public void OnChatMessage(string sender, string message) {
+            if(!Enabled) { return; }
+
             try {
                 if((Config.RollCommand == "/dice" && sender.ToLower().Contains(Dealer.Name.ToLower()) && message.Contains("Random! (1-13)")) || (Config.RollCommand == "/random" && message.Contains("You roll a") && message.Contains("out of 13"))) {
                     if(CurrentAction == Action.DealerDraw1) {
@@ -95,7 +97,7 @@ namespace GamblePyon.Games {
                         string cardValue = Config.RollCommand == "/dice" ? message.Replace("Random! (1-13) ", "") : Regex.Replace(message, ".*You roll a ([^\\(]+)\\(.*", "$1", RegexOptions.Singleline).Trim();
                         Dealer.Blackjack.Cards.Add(new Card(int.Parse(cardValue)));
 
-                        SendMessage($"{FormatMessage(Config.Blackjack.Message_DealerDraw1, Dealer)}");
+                        SendMessage($"{FormatMessage(Config.Blackjack.Messages["DealerDraw1"], Dealer)}");
                     } else if(CurrentAction == Action.DealerDraw2) {
                         CurrentAction = Action.None;
 
@@ -104,11 +106,13 @@ namespace GamblePyon.Games {
 
                         int value = Dealer.Blackjack.GetIntValue();
                         if(value == 21) {
-                            SendMessage($"{FormatMessage(Config.Blackjack.Message_DealerDraw2Blackjack, Dealer)}");
-                        } else if(value >= Config.Blackjack.DealerStandsOn) {
-                            SendMessage($"{FormatMessage(Config.Blackjack.Message_DealerDraw2Stand, Dealer)}");
+                            SendMessage($"{FormatMessage(Config.Blackjack.Messages["DealerDraw2Blackjack"], Dealer)}");
+                        } else if(Config.Blackjack.DealerStandMode != DealerStandMode.None && value >= GetStandValue()) {
+                            SendMessage($"{FormatMessage(Config.Blackjack.Messages["DealerDraw2Stand"], Dealer)}");
+                        } else if(Config.Blackjack.DealerStandMode != DealerStandMode.None) {
+                            SendMessage($"{FormatMessage(Config.Blackjack.Messages["DealerDraw2UnderStand"], Dealer)}");
                         } else {
-                            SendMessage($"{FormatMessage(Config.Blackjack.Message_DealerDraw2UnderStand, Dealer)}");
+                            SendMessage($"{FormatMessage(Config.Blackjack.Messages["DealerDraw2NoStandReq"], Dealer)}");
                         }
                     } else if(CurrentAction == Action.DealerHit) {
                         CurrentAction = Action.None;
@@ -118,13 +122,15 @@ namespace GamblePyon.Games {
 
                         int value = Dealer.Blackjack.GetIntValue();
                         if(value == 21) {
-                            SendMessage($"{FormatMessage(Config.Blackjack.Message_DealerHit21, Dealer)}");
-                        } else if(value >= Config.Blackjack.DealerStandsOn && value < 21) {
-                            SendMessage($"{FormatMessage(Config.Blackjack.Message_DealerHitStand, Dealer)}");
-                        } else if(value < Config.Blackjack.DealerStandsOn) {
-                            SendMessage($"{FormatMessage(Config.Blackjack.Message_DealerHitUnderStand, Dealer)}");
+                            SendMessage($"{FormatMessage(Config.Blackjack.Messages["DealerHit21"], Dealer)}");
+                        } else if(Config.Blackjack.DealerStandMode != DealerStandMode.None && value >= GetStandValue() && value < 21) {
+                            SendMessage($"{FormatMessage(Config.Blackjack.Messages["DealerHitStand"], Dealer)}");
+                        } else if(Config.Blackjack.DealerStandMode != DealerStandMode.None && value < GetStandValue()) {
+                            SendMessage($"{FormatMessage(Config.Blackjack.Messages["DealerHitUnderStand"], Dealer)}");
+                        } else if(Config.Blackjack.DealerStandMode == DealerStandMode.None && value < 21) {
+                            SendMessage($"{FormatMessage(Config.Blackjack.Messages["DealerHitNoStandReq"], Dealer)}");
                         } else {
-                            SendMessage($"{FormatMessage(Config.Blackjack.Message_DealerOver21, Dealer)}");
+                            SendMessage($"{FormatMessage(Config.Blackjack.Messages["DealerOver21"], Dealer)}");
                         }
                     } else if(CurrentAction == Action.PlayerDraw2) {
                         if(CurrentPlayer != null) {
@@ -136,9 +142,9 @@ namespace GamblePyon.Games {
 
                                 int value = CurrentPlayer.Blackjack.GetIntValue();
                                 if(value == 21) {
-                                    SendMessage($"{FormatMessage(Config.Blackjack.Message_PlayerDraw2Blackjack, CurrentPlayer)}");
+                                    SendMessage($"{FormatMessage(Config.Blackjack.Messages["PlayerDraw2Blackjack"], CurrentPlayer)}");
                                 } else {
-                                    SendMessage($"{FormatMessage(Config.Blackjack.Message_PlayerDraw2, CurrentPlayer)}");
+                                    SendMessage($"{FormatMessage(Config.Blackjack.Messages["PlayerDraw2"], CurrentPlayer)}");
                                 }
 
                                 CurrentPlayer = null;
@@ -153,15 +159,15 @@ namespace GamblePyon.Games {
 
                             int value = CurrentPlayer.Blackjack.GetIntValue();
                             if(value == 21) {
-                                SendMessage($"{FormatMessage(Config.Blackjack.Message_PlayerHit21, CurrentPlayer)}");
+                                SendMessage($"{FormatMessage(Config.Blackjack.Messages["PlayerHit21"], CurrentPlayer)}");
                             } else if(value < 21) {
                                 if(CurrentPlayer.Blackjack.Doubled) {
-                                    SendMessage($"{FormatMessage(Config.Blackjack.Message_PlayerHitUnder21Doubled, CurrentPlayer)}");
+                                    SendMessage($"{FormatMessage(Config.Blackjack.Messages["PlayerHitUnder21Doubled"], CurrentPlayer)}");
                                 } else {
-                                    SendMessage($"{FormatMessage(Config.Blackjack.Message_PlayerHitUnder21, CurrentPlayer)}");
+                                    SendMessage($"{FormatMessage(Config.Blackjack.Messages["PlayerHitUnder21"], CurrentPlayer)}");
                                 }
                             } else {
-                                SendMessage($"{FormatMessage(Config.Blackjack.Message_PlayerHitOver21, CurrentPlayer)}");
+                                SendMessage($"{FormatMessage(Config.Blackjack.Messages["PlayerHitOver21"], CurrentPlayer)}");
                             }
 
                             CurrentPlayer = null;
@@ -169,6 +175,25 @@ namespace GamblePyon.Games {
                     }
                 }
             } catch { }
+        }
+
+        private int GetStandValue() {
+            switch(Config.Blackjack.DealerStandMode) {
+                case DealerStandMode._16:
+                    return 16;
+                case DealerStandMode._17:
+                    return 17;
+            }
+
+            return 0;
+        }
+
+        private bool DealerCanHit() {
+            return (Config.Blackjack.DealerStandMode == DealerStandMode.None && Dealer.Blackjack.GetIntValue() < 21) || (Config.Blackjack.DealerStandMode != DealerStandMode.None && Dealer.Blackjack.GetIntValue() < GetStandValue());
+        }
+
+        private bool DealerSafe() {
+            return Dealer.Blackjack.GetIntValue() <= 21 && (Config.Blackjack.DealerStandMode == DealerStandMode.None || (Config.Blackjack.DealerStandMode != DealerStandMode.None && Dealer.Blackjack.GetIntValue() >= GetStandValue()));
         }
 
         public void DrawDealer() {
@@ -244,9 +269,9 @@ namespace GamblePyon.Games {
 
             //Bet Actions
             ImGui.SetNextItemWidth(-1);
-            if(!string.IsNullOrWhiteSpace(Dealer.Alias) && (CurrentEvent == Event.PlaceBets || (CurrentEvent == Event.BetsPlaced && Players.Find(x => x.Bet > 0) != null))) {
+            if(Enabled && !string.IsNullOrWhiteSpace(Dealer.Alias) && (CurrentEvent == Event.PlaceBets || (CurrentEvent == Event.BetsPlaced && Players.Find(x => x.Bet > 0) != null))) {
                 string btnId = CurrentEvent != Event.BetsPlaced ? "B" : "F";
-                string btnMsg = CurrentEvent != Event.BetsPlaced ? Config.Blackjack.Message_PlaceBets : Config.Blackjack.Message_BetsPlaced;
+                string btnMsg = CurrentEvent != Event.BetsPlaced ? Config.Blackjack.Messages["PlaceBets"] : Config.Blackjack.Messages["BetsPlaced"];
                 string hoverMsg = CurrentEvent != Event.BetsPlaced ? "Request players to place bets." : "Announce all bets are placed.";
 
                 if(ImGui.Button(btnId)) {
@@ -266,7 +291,7 @@ namespace GamblePyon.Games {
 
             //Card Actions
             ImGui.SetNextItemWidth(-1);
-            if(!string.IsNullOrWhiteSpace(Dealer.Alias) && CurrentEvent == Event.CardActions && Dealer.Blackjack.GetIntValue() < Config.Blackjack.DealerStandsOn) {
+            if(Enabled && !string.IsNullOrWhiteSpace(Dealer.Alias) && CurrentEvent == Event.CardActions && DealerCanHit()) {
                 if(Dealer.Blackjack.Cards.Count == 0 && Players.Find(x => x.Alias != "" && x.Bet != 0 && x.Blackjack.Cards.Count != 2) == null) {
                     if(ImGui.Button("1")) {
                         CurrentAction = Action.DealerDraw1;
@@ -275,7 +300,7 @@ namespace GamblePyon.Games {
                     if(ImGui.IsItemHovered()) { ImGui.SetTooltip("After player initial 2 cards, draw dealer 1st card."); }
                 } else if(Dealer.Blackjack.Cards.Count > 0) {
                     string btnId = Dealer.Blackjack.Cards.Count == 1 ? "2" : "H";
-                    string hoverMsg = Dealer.Blackjack.Cards.Count == 1 ? "After player card actions, draw dealer 2nd card." : $"After 2nd card, hit until {Config.Blackjack.DealerStandsOn} or over.";
+                    string hoverMsg = Dealer.Blackjack.Cards.Count == 1 ? "After player card actions, draw dealer 2nd card." : Config.Blackjack.DealerStandMode == DealerStandMode.None ? "After 2nd card, hit/stand as desired." : $"After 2nd card, hit until {GetStandValue()} or over.";
 
                     if(ImGui.Button(btnId)) {
                         CurrentAction = Dealer.Blackjack.Cards.Count == 1 ? Action.DealerDraw2 : Action.DealerHit;
@@ -302,9 +327,9 @@ namespace GamblePyon.Games {
             ImGui.SetNextItemWidth(-1);
             int dealerValue = Dealer.Blackjack.GetIntValue();
             Player? playerValue = Players.Find(x => !string.IsNullOrWhiteSpace(x.Alias) && x.Blackjack.Cards.Count > 0 && x.Blackjack.GetIntValue() > dealerValue && x.Blackjack.GetIntValue() <= 21);
-            if(!string.IsNullOrWhiteSpace(Dealer.Alias) && playerValue == null && dealerValue >= Config.Blackjack.DealerStandsOn && dealerValue <= 21) {
+            if(Enabled && !string.IsNullOrWhiteSpace(Dealer.Alias) && playerValue == null && DealerSafe()) {
                 if(ImGui.Button("W")) {
-                    SendMessage($"{FormatMessage(Config.Blackjack.Message_NoWinners, Dealer)}");
+                    SendMessage($"{FormatMessage(Config.Blackjack.Messages["NoWinners"], Dealer)}");
                     EndRound();
                 }
                 if(ImGui.IsItemHovered()) {
@@ -406,9 +431,9 @@ namespace GamblePyon.Games {
 
                 //Bet Actions
                 ImGui.SetNextItemWidth(-1);
-                if(!string.IsNullOrWhiteSpace(player.Alias) && player.Bet > 0 && player.Blackjack.Cards.Count == 0 && CurrentEvent == Event.BetsPlaced) {
+                if(Enabled && !string.IsNullOrWhiteSpace(player.Alias) && player.Bet > 0 && player.Blackjack.Cards.Count == 0 && CurrentEvent == Event.BetsPlaced) {
                     string btnId = player.Blackjack.IsPush ? "P" : "B";
-                    string btnMsg = player.Blackjack.IsPush ? Config.Blackjack.Message_PlayerBetPushed : Config.Blackjack.Message_PlayerBet;
+                    string btnMsg = player.Blackjack.IsPush ? Config.Blackjack.Messages["PlayerBetPushed"] : Config.Blackjack.Messages["PlayerBet"];
                     string hoverMsg = player.Blackjack.IsPush && Config.Blackjack.PushAllowBet ? "After trading, announce player's bet as a pushed bet." : player.Blackjack.IsPush ? "No trading, announce player's bet as a pushed bet from previous round." : "After trading, announce player's bet.";
                     if(ImGui.Button(btnId)) {
                         SendMessage($"{FormatMessage(btnMsg, player)}");
@@ -418,24 +443,24 @@ namespace GamblePyon.Games {
                     }
                 }
                 
-                if(!string.IsNullOrWhiteSpace(player.Alias) && !player.Blackjack.Doubled && Dealer.Blackjack.Cards.Count == 1 && player.Blackjack.Cards.Count == 2 && player.Blackjack.GetIntValue() < 21 && (!player.Blackjack.IsPush || (player.Blackjack.IsPush && Config.Blackjack.PushAllowDouble))) {
+                if(Enabled && !string.IsNullOrWhiteSpace(player.Alias) && !player.Blackjack.Doubled && Dealer.Blackjack.Cards.Count == 1 && player.Blackjack.Cards.Count == 2 && player.Blackjack.GetIntValue() < 21 && (!player.Blackjack.IsPush || (player.Blackjack.IsPush && Config.Blackjack.PushAllowDouble))) {
                     ImGui.SameLine();
                     if(ImGui.Button("D###doubleBet")) {
                         if(Config.Blackjack.AutoDouble) {
                             player.Bet = player.Bet * 2;
                         }
                         player.Blackjack.Doubled = true;
-                        SendMessage($"{FormatMessage(Config.Blackjack.Message_PlayerBetDouble, player)}");
+                        SendMessage($"{FormatMessage(Config.Blackjack.DoubleMustHit ? Config.Blackjack.Messages["PlayerBetDoubleMustHit"] : Config.Blackjack.Messages["PlayerBetDouble"], player)}");
                     }
                     if(ImGui.IsItemHovered()) {
-                        ImGui.SetTooltip("After trading, announce player's bet as a doubled bet.");
+                        ImGui.SetTooltip($"After trading, announce player's bet as a doubled bet.{(Config.Blackjack.DoubleMustHit ? "\nRule in play: Player must hit on double down." : "")}");
                     }
                 }
                 ImGui.NextColumn();
 
                 //Card Actions
                 ImGui.SetNextItemWidth(-1);
-                if(!string.IsNullOrWhiteSpace(player.Alias) && player.Bet > 0 && CurrentEvent == Event.CardActions) {
+                if(Enabled && !string.IsNullOrWhiteSpace(player.Alias) && player.Bet > 0 && CurrentEvent == Event.CardActions) {
                     string btnId = player.Blackjack.Cards.Count == 0 ? "1" : player.Blackjack.Cards.Count == 1 ? "2" : "";
                     string hoverMsg = player.Blackjack.Cards.Count < 2 ? "After bets, draw initial 2 cards." : "";
 
@@ -453,7 +478,7 @@ namespace GamblePyon.Games {
                         hoverMsg = "After dealer's 1st card, request player to " + (!player.Blackjack.IsPush || Config.Blackjack.PushAllowDouble ? "Stand/Hit/Double" : "Stand/Hit");
 
                         if(ImGui.Button(btnId)) {
-                            SendMessage($"{FormatMessage((!player.Blackjack.IsPush || Config.Blackjack.PushAllowDouble ? Config.Blackjack.Message_PlayerStandHitDouble : Config.Blackjack.Message_PlayerStandHit), player)}");
+                            SendMessage($"{FormatMessage((!player.Blackjack.IsPush || Config.Blackjack.PushAllowDouble ? Config.Blackjack.Messages["PlayerStandHitDouble"] : Config.Blackjack.Messages["PlayerStandHit"]), player)}");
                         }
                         if(ImGui.IsItemHovered()) {
                             ImGui.SetTooltip(hoverMsg);
@@ -489,9 +514,9 @@ namespace GamblePyon.Games {
 
                 //Result Actions
                 ImGui.SetNextItemWidth(-1);
-                if(!string.IsNullOrWhiteSpace(player.Alias) && player.Bet > 0 && player.Blackjack.Cards.Count >= 2 && Dealer.Blackjack.Cards.Count >= 2) {
+                if(Enabled && !string.IsNullOrWhiteSpace(player.Alias) && player.Bet > 0 && player.Blackjack.Cards.Count >= 2 && Dealer.Blackjack.Cards.Count >= 2) {
                     int dealerValue = Dealer.Blackjack.GetIntValue();
-                    if(dealerValue >= Config.Blackjack.DealerStandsOn) {
+                    if(Config.Blackjack.DealerStandMode == DealerStandMode.None || dealerValue >= GetStandValue()) {
                         int playerValue = player.Blackjack.GetIntValue();
 
                         if((playerValue > dealerValue || dealerValue > 21) && playerValue <= 21) {
@@ -501,7 +526,7 @@ namespace GamblePyon.Games {
                                 player.TotalWinnings += player.Winnings;
                                 Dealer.TotalWinnings = Dealer.TotalWinnings - player.Winnings;
                                 player.Bet = 0;
-                                SendMessage($"{FormatMessage(Config.Blackjack.Message_Win, player)}");
+                                SendMessage($"{FormatMessage(Config.Blackjack.Messages["Win"], player)}");
                                 EndRound();
                             }
                             if(ImGui.IsItemHovered()) {
@@ -512,7 +537,7 @@ namespace GamblePyon.Games {
                                 player.TotalWinnings -= player.Bet;
                                 Dealer.TotalWinnings += player.Bet;
                                 player.Bet = 0;
-                                SendMessage($"{FormatMessage(Config.Blackjack.Message_Loss, player)}");
+                                SendMessage($"{FormatMessage(Config.Blackjack.Messages["Loss"], player)}");
                                 EndRound();
                             }
                             if(ImGui.IsItemHovered()) {
@@ -520,7 +545,7 @@ namespace GamblePyon.Games {
                             }
                         } else if(playerValue <= 21 && playerValue == dealerValue) {
                             if(ImGui.Button("D###draw")) {
-                                SendMessage($"{FormatMessage(Config.Blackjack.Message_Draw, player)}");
+                                SendMessage($"{FormatMessage(Config.Blackjack.Messages["Draw"], player)}");
                                 EndRound();
                             }
                             if(ImGui.IsItemHovered()) {
@@ -571,14 +596,20 @@ namespace GamblePyon.Games {
             ImGuiEx.InputInt("###maxBet", Config.Blackjack, nameof(Config.Blackjack.MaxBet));
             ImGui.NextColumn();
             ImGui.SetNextItemWidth(-1);
-            if(ImGui.RadioButton("16", Config.Blackjack.DealerStandsOn == 16)) {
-                Config.Blackjack.DealerStandsOn = 16;
+            if(ImGui.RadioButton("None", Config.Blackjack.DealerStandMode == DealerStandMode.None)) {
+                Config.Blackjack.DealerStandMode = DealerStandMode.None;
             }
-            if(ImGui.IsItemHovered()) { ImGui.SetTooltip("Why I included this as an option?\nI don't know.. I read it was an alternative rule, so.."); }
+            if(ImGui.IsItemHovered()) { ImGui.SetTooltip("Dealer plays without stand limitation."); }
             ImGui.SameLine();
-            if(ImGui.RadioButton("17", Config.Blackjack.DealerStandsOn == 17)) {
-                Config.Blackjack.DealerStandsOn = 17;
+            if(ImGui.RadioButton("16", Config.Blackjack.DealerStandMode == DealerStandMode._16)) {
+                Config.Blackjack.DealerStandMode = DealerStandMode._16;
             }
+            if(ImGui.IsItemHovered()) { ImGui.SetTooltip("Dealer must stand when value is 16 or over."); }
+            ImGui.SameLine();
+            if(ImGui.RadioButton("17", Config.Blackjack.DealerStandMode == DealerStandMode._17)) {
+                Config.Blackjack.DealerStandMode = DealerStandMode._17;
+            }
+            if(ImGui.IsItemHovered()) { ImGui.SetTooltip("Dealer must stand when value is 17 or over."); }
             ImGui.NextColumn();
 
             ImGui.Separator();
@@ -591,16 +622,16 @@ namespace GamblePyon.Games {
             ImGui.NextColumn();
 
             ImGui.SetNextItemWidth(-1);
-            ImGuiEx.Checkbox($"Allow Bet on Push", Config.Blackjack, nameof(Config.Blackjack.PushAllowBet));
+            ImGuiEx.Checkbox($"Double Must Hit", Config.Blackjack, nameof(Config.Blackjack.DoubleMustHit));
             if(ImGui.IsItemHovered()) {
-                ImGui.SetTooltip("Whether a player with a pushed bet can bet again next round, adding to their pushed bet.");
+                ImGui.SetTooltip("Whether double down will require a hit.\nDisabling this is a big advantage to a player that doubles on 17-20.");
             }
             ImGui.NextColumn();
 
             ImGui.SetNextItemWidth(-1);
-            ImGuiEx.Checkbox($"Allow Double on Push", Config.Blackjack, nameof(Config.Blackjack.PushAllowDouble));
+            ImGuiEx.Checkbox($"Allow Bet on Push", Config.Blackjack, nameof(Config.Blackjack.PushAllowBet));
             if(ImGui.IsItemHovered()) {
-                ImGui.SetTooltip("Whether a player with a pushed bet can double down next round, doubling their pushed bet.");
+                ImGui.SetTooltip("Whether a player with a pushed bet can bet again next round, adding to their pushed bet.");
             }
             ImGui.NextColumn();
 
@@ -615,7 +646,10 @@ namespace GamblePyon.Games {
             ImGui.NextColumn();
 
             ImGui.SetNextItemWidth(-1);
-            ImGuiHelpers.ScaledDummy(5);
+            ImGuiEx.Checkbox($"Allow Double on Push", Config.Blackjack, nameof(Config.Blackjack.PushAllowDouble));
+            if(ImGui.IsItemHovered()) {
+                ImGui.SetTooltip("Whether a player with a pushed bet can double down next round, doubling their pushed bet.");
+            }
             ImGui.NextColumn();
 
             ImGui.Separator();
@@ -648,207 +682,22 @@ namespace GamblePyon.Games {
 
             ImGui.Separator();
 
-            ImGui.PushID($"m_0");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("PlaceBets");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m0", Config.Blackjack, nameof(Config.Blackjack.Message_PlaceBets));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_00");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("BetsPlaced");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m00", Config.Blackjack, nameof(Config.Blackjack.Message_BetsPlaced));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_1");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("PlayerBet");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m1", Config.Blackjack, nameof(Config.Blackjack.Message_PlayerBet));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_1_2");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("PlayerBetPushed");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m1_2", Config.Blackjack, nameof(Config.Blackjack.Message_PlayerBetPushed));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_2");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("PlayerBetDouble");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m2", Config.Blackjack, nameof(Config.Blackjack.Message_PlayerBetDouble));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_3");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("PlayerDraw2");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m3", Config.Blackjack, nameof(Config.Blackjack.Message_PlayerDraw2));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_4");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("PlayerDraw2Blackjack");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m4", Config.Blackjack, nameof(Config.Blackjack.Message_PlayerDraw2Blackjack));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_5");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("PlayerStandHit");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m5", Config.Blackjack, nameof(Config.Blackjack.Message_PlayerStandHit));
-            if(ImGui.IsItemHovered()) { ImGui.SetTooltip("This might look the same as PlayerHitUnder21\n..but it's not the same, trust me."); }
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_5_2");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("PlayerStandHitDouble");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m5_2", Config.Blackjack, nameof(Config.Blackjack.Message_PlayerStandHitDouble));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_6");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("PlayerHitUnder21");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m6", Config.Blackjack, nameof(Config.Blackjack.Message_PlayerHitUnder21));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_6_2");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("PlayerHitUnder21Doubled");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m6_2", Config.Blackjack, nameof(Config.Blackjack.Message_PlayerHitUnder21Doubled));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_7");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("PlayerHit21");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m7", Config.Blackjack, nameof(Config.Blackjack.Message_PlayerHit21));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_8");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("PlayerHitOver21");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m8", Config.Blackjack, nameof(Config.Blackjack.Message_PlayerHitOver21));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_9");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("DealerDraw1");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m9", Config.Blackjack, nameof(Config.Blackjack.Message_DealerDraw1));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_10");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("DealerDraw2UnderStand");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m10", Config.Blackjack, nameof(Config.Blackjack.Message_DealerDraw2UnderStand));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_11");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("DealerDraw2Stand");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m11", Config.Blackjack, nameof(Config.Blackjack.Message_DealerDraw2Stand));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_12");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("DealerDraw2Blackjack");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m12", Config.Blackjack, nameof(Config.Blackjack.Message_DealerDraw2Blackjack));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_13");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("DealerHitUnderStand");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m13", Config.Blackjack, nameof(Config.Blackjack.Message_DealerHitUnderStand));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_14");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("DealerHitStand");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m14", Config.Blackjack, nameof(Config.Blackjack.Message_DealerHitStand));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_15");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("DealerHit21");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m15", Config.Blackjack, nameof(Config.Blackjack.Message_DealerHit21));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_16");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("DealerOver21");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m16", Config.Blackjack, nameof(Config.Blackjack.Message_DealerOver21));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_17");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("Win");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m17", Config.Blackjack, nameof(Config.Blackjack.Message_Win));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_17_2");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("Loss");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m17_2", Config.Blackjack, nameof(Config.Blackjack.Message_Loss));
-            if(ImGui.IsItemHovered()) { ImGui.SetTooltip("Should probably not let people know when they lose.\n..it might make them realize they're losing, you know?"); }
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_18");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("Draw");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m18", Config.Blackjack, nameof(Config.Blackjack.Message_Draw));
-            ImGui.NextColumn(); ImGui.Separator();
-
-            ImGui.PushID($"m_19");
-            ImGui.SetNextItemWidth(-1);
-            ImGui.Text("NoWinners");
-            ImGui.NextColumn();
-            ImGui.SetNextItemWidth(-1);
-            ImGuiEx.InputText("###m19", Config.Blackjack, nameof(Config.Blackjack.Message_NoWinners));
-            ImGui.NextColumn(); ImGui.Separator();
+            foreach(var message in Config.Blackjack.Messages) {
+                ImGui.PushID($"m_{message.Key}");
+                ImGui.SetNextItemWidth(-1);
+                ImGui.Text(message.Key);
+                ImGui.NextColumn();
+                ImGui.SetNextItemWidth(-1);
+                string msg = message.Value;
+                ImGui.InputText($"###m{message.Key}", ref msg, 255);
+                Config.Blackjack.Messages[message.Key] = msg;
+                if(message.Key == "PlayerStandHit") {
+                    if(ImGui.IsItemHovered()) { ImGui.SetTooltip("This might look the same as PlayerHitUnder21\n..but it's not the same, trust me."); }
+                } else if(message.Key == "Loss") {
+                    if(ImGui.IsItemHovered()) { ImGui.SetTooltip("Should probably not let people know when they lose.\n..it might make them realize they're losing, you know?"); }
+                }
+                ImGui.NextColumn(); ImGui.Separator();
+            }
         }
 
         public void DrawGuide() {
