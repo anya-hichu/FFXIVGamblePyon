@@ -10,15 +10,6 @@ namespace GamblePyon.Extensions {
         }
 
         /// <summary>Extension to enable passing property as value with referencing behaviour.</summary>
-        public static bool InputText(string label, object obj, string nameofProp, uint length = 255) {
-            var p = obj.GetType().GetProperty(nameofProp);
-            string x = (string)(p?.GetValue(obj) ?? "");
-            bool r = ImGui.InputText(label, ref x, length);
-            p?.SetValue(obj, x);
-            return r;
-        }
-
-        /// <summary>Extension to enable passing property as value with referencing behaviour.</summary>
         public static bool InputInt(string label, object obj, string nameofProp) {
             var p = obj.GetType().GetProperty(nameofProp);
             int x = (int)(p?.GetValue(obj) ?? 0);

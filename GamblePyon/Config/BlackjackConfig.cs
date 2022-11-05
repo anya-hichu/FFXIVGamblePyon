@@ -9,11 +9,13 @@ namespace GamblePyon {
         public int MaxBet { get; set; } = 500000;
         public float NormalWinMultiplier { get; set; } = 2f;
         public float BlackjackWinMultiplier { get; set; } = 2.5f;
+        public bool NaturalBlackjack { get; set; } = true;
         public DealerStandMode DealerStandMode { get; set; } = DealerStandMode._17;
         public bool AutoDouble { get; set; } = true;
         public bool DoubleMustHit { get; set; } = false;
         public bool PushAllowBet { get; set; } = false;
         public bool PushAllowDouble { get; set; } = true;
+        public bool ShowSuit { get; set; } = true;
 
         public Dictionary<string, string> Messages = new Dictionary<string, string>() {
             { "PlaceBets", "Round Starting, place your bets!  #minbet# ~ #maxbet#  <se.12>" },
@@ -27,6 +29,7 @@ namespace GamblePyon {
             { "PlayerDraw2Blackjack", " #player#  draws 2 cards: #cards# (#value#) ★BLACKJACK★ <se.7>" },
             { "PlayerStandHit", " #player#  Hand: #cards# (#value#) ＜Stand/Hit＞" },
             { "PlayerStandHitDouble", " #player#  Hand: #cards# (#value#) ＜Stand/Hit/Double＞" },
+            { "PlayerStand", " #player#  decides to stand!" },
             { "PlayerHitUnder21", " #player#  Hand: #cards# (#value#) ＜Stand/Hit＞" },
             { "PlayerHitUnder21Doubled", " #player#  Hand: #cards# (#value#) ＜Stand!＞" },
             { "PlayerHit21", " #player#  Hand: #cards# (#value#) ★BLACKJACK★ <se.7>" },

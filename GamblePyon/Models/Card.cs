@@ -9,11 +9,10 @@ namespace GamblePyon.Models {
         public string Suit { get; set; }
         public bool Ace { get; set; }
 
-        public Card(int value) {
+        public Card(int value, bool showSuit) {
             Value = value <= 10 ? value : 10;
             Ace = value == 1;
-            Suit = Suits[new Random().Next(4)];
-
+            Suit = showSuit ? Suits[new Random().Next(4)] : "";
             string JQK = value == 11 ? "J" : value == 12 ? "Q" : value == 13 ? "K" : "";
             Text = Ace ? $"A{Suit}" : JQK != "" ? $"{JQK}{Suit}" : $"{Value}{Suit}";
         }

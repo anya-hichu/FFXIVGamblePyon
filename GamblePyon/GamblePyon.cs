@@ -41,6 +41,7 @@ namespace GamblePyon {
             MainWindow.Config = PluginInterface.GetPluginConfig() as Config ?? new Config();
             MainWindow.Config.Initialize(PluginInterface);
             Windows.AddWindow(MainWindow);
+            MainWindow.Initialize();
 
             PluginInterface.UiBuilder.Draw += Windows.Draw;
             ChatGui.ChatMessage += MainWindow.OnChatMessage;
@@ -49,7 +50,7 @@ namespace GamblePyon {
         public void Dispose() {
             PluginInterface.UiBuilder.Draw -= Windows.Draw;
             ChatGui.ChatMessage -= MainWindow.OnChatMessage;
-            if(MainWindow.PartyManager != null) { MainWindow.PartyManager.Dispose(); }
+            MainWindow.Dispose();
             CommandManager.RemoveHandler(CommandName);
             XIVCommon.Dispose();
         }

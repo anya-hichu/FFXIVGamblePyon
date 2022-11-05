@@ -3,6 +3,7 @@ using Dalamud.Plugin;
 using System;
 
 namespace GamblePyon {
+    public enum MainTab { Blackjack, Config, About }
     public enum NameMode { First, Last, Both }
 
     [Serializable]

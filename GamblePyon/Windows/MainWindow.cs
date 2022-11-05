@@ -5,8 +5,9 @@ using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
 
-using GamblePyon.Games;
+using GamblePyon.Modules;
 using GamblePyon.Extensions;
+using GamblePyon.Models;
 
 namespace GamblePyon {
     public class MainWindow : Window {
@@ -14,15 +15,12 @@ namespace GamblePyon {
         public static Config Config { get; set; }
 
         private MainTab CurrentMainTab = MainTab.Blackjack;
-        private enum MainTab { Blackjack, Config }
-
-        private SubTab CurrentSubTab = SubTab.BlackjackGame;
-        private enum SubTab { BlackjackGame, BlackjackConfig, BlackjackGuide }
 
         private string Messages = "";
 
-        public PartyManager PartyManager;
-        private Blackjack Blackjack;
+        public PlayerManager PlayerManager;
+        public Blackjack Blackjack;
+        public Player Dealer;
 
         public MainWindow(GamblePyon plugin) : base("GamblePyon") {
             this.SizeCondition = ImGuiCond.Appearing;
@@ -30,21 +28,24 @@ namespace GamblePyon {
             this.plugin = plugin;
         }
 
-        public override void OnOpen() {
-            if(Blackjack == null) {
-                Blackjack = new Blackjack();
-                Blackjack.Config = Config;
-                Blackjack.Send_Message += Blackjack_SendMessage;
-                Blackjack.Initialize();
-            }
+        public void Initialize() {
+            Blackjack = new Blackjack(this);
+        }
 
+        public void Dispose() {
+            Blackjack?.Dispose();
+            PlayerManager?.Dispose();
+        }
+
+        public override void OnOpen() {
             base.OnOpen();
         }
 
-        private void Blackjack_SendMessage(object? sender, MessageEventArgs e) => SendMessage(e.Message, e.MessageType);
+        public void Close_Window(object? sender, System.EventArgs e) => IsOpen = false;
+        public void Send_Message(object? sender, MessageEventArgs e) => SendMessage(e.Message, e.MessageType, e.ModuleTab);
 
         private List<string> QueuedMessages = new List<string>();
-        private void SendMessage(string message, MessageType messageType) {
+        private void SendMessage(string message, MessageType messageType, MainTab moduleTab) {
             if(!string.IsNullOrWhiteSpace(message)) {
                 if(messageType == MessageType.Normal) {
                     QueuedMessages.Add($"{(Config.Debug ? "/echo" : Config.ChatChannel)} {message}");
@@ -66,8 +67,6 @@ namespace GamblePyon {
             if(isHandled) { return; }
 
             ReceivedMessage(sender.TextValue, message.TextValue);
-
-            //Messages += $"[{type}] [{senderId}] [{sender.TextValue}] [{message.TextValue}]\n";
         }
 
         private void ReceivedMessage(string sender, string message) {
@@ -81,15 +80,19 @@ namespace GamblePyon {
 
             switch(CurrentMainTab) {
                 case MainTab.Blackjack: {
-                        DrawBlackjackSubTabs();
+                        Blackjack.DrawSubTabs();
                         break;
                     }
                 case MainTab.Config: {
                         DrawMainConfig();
                         break;
                     }
+                case MainTab.About: {
+                        DrawAbout();
+                        break;
+                    }
                 default:
-                    DrawBlackjackSubTabs();
+                    Blackjack.DrawSubTabs();
                     break;
             }
 
@@ -99,12 +102,12 @@ namespace GamblePyon {
             }
 
             if(Config.ChatChannel == "/p" && Config.AutoParty) {
-                if(Blackjack != null && Blackjack.Players != null) {
-                    if(PartyManager == null) {
-                        PartyManager = new PartyManager();
+                if(Blackjack != null && Blackjack.Players != null && Blackjack.Enabled) {
+                    if(PlayerManager == null) {
+                        PlayerManager = new PlayerManager();
                     }
 
-                    PartyManager.UpdatePlayers(ref Blackjack.Players, Blackjack.Dealer, Config.AutoNameMode);
+                    PlayerManager.UpdateParty(ref Blackjack.Players, Blackjack.Dealer, Config.AutoNameMode);
                 }
             }
         }
@@ -118,6 +121,11 @@ namespace GamblePyon {
 
                 if(ImGui.BeginTabItem("Main Config###GamblePyon_Config_MainTab")) {
                     CurrentMainTab = MainTab.Config;
+                    ImGui.EndTabItem();
+                }
+
+                if(ImGui.BeginTabItem("About###GamblePyon_About_MainTab")) {
+                    CurrentMainTab = MainTab.About;
                     ImGui.EndTabItem();
                 }
 
@@ -189,119 +197,27 @@ namespace GamblePyon {
             ImGui.Separator();
             ImGuiHelpers.ScaledDummy(5);
 
-            ConfigButtons();
-        }
-
-        private void DrawBlackjackSubTabs() {
-            if(ImGui.BeginTabBar("BlackjackSubTabBar", ImGuiTabBarFlags.NoTooltip)) {
-                if(ImGui.BeginTabItem("Game###GamblePyon_BlackjackGame_SubTab")) {
-                    CurrentSubTab = SubTab.BlackjackGame;
-                    ImGui.EndTabItem();
-                }
-
-                if(ImGui.BeginTabItem("Config###GamblePyon_BlackjackConfig_SubTab")) {
-                    CurrentSubTab = SubTab.BlackjackConfig;
-                    ImGui.EndTabItem();
-                }
-
-                if(ImGui.BeginTabItem("Guide###GamblePyon_BlackjackGuide_SubTab")) {
-                    CurrentSubTab = SubTab.BlackjackGuide;
-                    ImGui.EndTabItem();
-                }
-
-                ImGui.EndTabBar();
-                ImGui.Spacing();
-            }
-
-            switch(CurrentSubTab) {
-                case SubTab.BlackjackGame: {
-                        DrawBlackjackGame();
-                        break;
-                    }
-                case SubTab.BlackjackConfig: {
-                        DrawBlackjackConfig();
-                        break;
-                    }
-                case SubTab.BlackjackGuide: {
-                        DrawBlackjackGuide();
-                        break;
-                    }
-                default:
-                    DrawBlackjackConfig();
-                    break;
-            }
-        }
-
-        private void DrawBlackjackGame() {
-            //ImGui.InputTextMultiline("###input", ref Messages, 1000, new Vector2(500, 300));
-            //ImGui.Separator();
-            //ImGuiHelpers.ScaledDummy(5);
-
-            Blackjack.DrawDealer();
-
-            ImGui.Separator();
-            ImGui.PopID();
-            ImGui.Columns(1);
-            ImGui.Separator();
-
-            Blackjack.DrawPlayerList();
-
-            ImGui.Separator();
-            ImGui.PopID();
-            ImGui.Columns(1);
-            ImGui.Separator();
-            ImGuiHelpers.ScaledDummy(5);
-
-            if(ImGui.Button("Reset")) {
-                Blackjack.ResetRound();
-            }
-            ImGui.SameLine();
-            if(ImGui.Button("Close")) {
-                IsOpen = false;
-            }
-        }
-
-        private void DrawBlackjackConfig() {
-            Blackjack.DrawConfigGameSetup();
-
-            ImGui.Columns(1);
-            ImGui.Separator();
-            ImGuiHelpers.ScaledDummy(5);
-
-            ConfigButtons();
-
-            ImGui.Columns(1);
-            ImGui.Separator();
-            ImGuiHelpers.ScaledDummy(5);
-
-            Blackjack.DrawConfigMessages();
-
-            ImGui.PopID();
-            ImGui.Columns(1);
-            ImGui.Separator();
-            ImGuiHelpers.ScaledDummy(5);
-
-            ConfigButtons();
-        }
-
-        private void DrawBlackjackGuide() {
-            Blackjack.DrawGuide();
-
-            ImGui.Columns(1);
-            ImGui.Separator();
-            ImGuiHelpers.ScaledDummy(5);
-
-            if(ImGui.Button("Close")) {
-                IsOpen = false;
-            }
-        }
-
-        private void ConfigButtons() {
             if(ImGui.Button("Save")) {
                 Config.Save();
             }
-
             ImGui.SameLine();
+            if(ImGui.Button("Close")) {
+                IsOpen = false;
+            }
+        }
+
+        private void DrawAbout() {
+            ImGui.Text("This plugin is developed by Primu Pyon@Omega");
+            ImGui.Text("Originally intended for use in the Emerald Lynx Club @Omega-Goblet-W10P30");
+            ImGui.Text("but made available for use by anyone who happens upon my repo link.");
+
+            ImGui.Separator();
+
+            ImGui.Text("If you'd like to support me, send me a gift :3");
+
+            ImGui.Columns(1);
+            ImGui.Separator();
+            ImGuiHelpers.ScaledDummy(5);
 
             if(ImGui.Button("Close")) {
                 IsOpen = false;
