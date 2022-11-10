@@ -2,12 +2,12 @@
 using System.Numerics;
 using Dalamud.Game.Text;
 using Dalamud.Interface;
+using Dalamud.Interface.Colors;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
-
-using GamblePyon.Modules;
 using GamblePyon.Extensions;
 using GamblePyon.Models;
+using GamblePyon.Modules;
 
 namespace GamblePyon {
     public class MainWindow : Window {
@@ -15,8 +15,6 @@ namespace GamblePyon {
         public static Config Config { get; set; }
 
         private MainTab CurrentMainTab = MainTab.Blackjack;
-
-        private string Messages = "";
 
         public PlayerManager PlayerManager;
         public Blackjack Blackjack;
@@ -107,7 +105,7 @@ namespace GamblePyon {
                         PlayerManager = new PlayerManager();
                     }
 
-                    PlayerManager.UpdateParty(ref Blackjack.Players, Blackjack.Dealer, Config.AutoNameMode);
+                    PlayerManager.UpdateParty(ref Blackjack.Players, GamblePyon.ClientState.LocalPlayer.Name.TextValue, Config.AutoNameMode);
                 }
             }
         }
@@ -207,18 +205,20 @@ namespace GamblePyon {
         }
 
         private void DrawAbout() {
-            ImGui.Text("This plugin is developed by Primu Pyon@Omega");
-            ImGui.Text("Originally intended for use in the Emerald Lynx Club @Omega-Goblet-W10P30");
-            ImGui.Text("but made available for use by anyone who happens upon my repo link.");
+            ImGui.TextColored(ImGuiColors.DalamudGrey, "About");
+            ImGui.TextWrapped("This plugin is developed by Primu Pyon@Omega");
+            ImGui.TextWrapped("Originally intended for use by staff working for Emerald Lynx Club @Omega-Goblet-W10P30");
+            ImGui.TextWrapped("But made available for use by anyone who happens upon my repo link.");
+            ImGui.Separator();
+            ImGui.TextWrapped("If you'd like to support me, send me a gift :3");
 
             ImGui.Separator();
-
-            ImGui.Text("If you'd like to support me, send me a gift :3");
+            ImGui.TextColored(ImGuiColors.DalamudGrey, "Change Log");
+            ImGui.TextWrapped("1.0.0.4 ~ 2022.11.10\n- Added this change log!\n- Implemented automatic way of handling Blackjack dealer name, so different name display types are now properly supported.");
 
             ImGui.Columns(1);
             ImGui.Separator();
             ImGuiHelpers.ScaledDummy(5);
-
             if(ImGui.Button("Close")) {
                 IsOpen = false;
             }

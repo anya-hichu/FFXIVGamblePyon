@@ -1,12 +1,12 @@
-﻿using Dalamud.Game.Command;
-using Dalamud.IoC;
-using Dalamud.Plugin;
+﻿using Dalamud.Game;
+using Dalamud.Game.ClientState;
+using Dalamud.Game.ClientState.Objects;
+using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
 using Dalamud.Interface.Windowing;
+using Dalamud.IoC;
+using Dalamud.Plugin;
 using XivCommon;
-using Dalamud.Game.ClientState;
-using Dalamud.Game;
-using Dalamud.Game.ClientState.Objects;
 
 namespace GamblePyon {
     public sealed class GamblePyon : IDalamudPlugin {
@@ -17,7 +17,6 @@ namespace GamblePyon {
         [PluginService] public static CommandManager CommandManager { get; private set; } = null!;
         [PluginService] public static ChatGui ChatGui { get; private set; } = null!;
         [PluginService] public static ClientState ClientState { get; private set; } = null!;
-        [PluginService] public static Framework Framework { get; private set; } = null!;
         [PluginService] public static ObjectTable Objects { get; private set; } = null!;
         [PluginService] public static SigScanner SigScanner { get; private set; } = null!;
 
