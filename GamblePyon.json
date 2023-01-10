@@ -5,12 +5,12 @@
 	"Description": "An interface for managing a game of Blackjack.\n/pyon - Open GamblePyon",
 	"Changelog": "",
 	"InternalName": "GamblePyon",
-	"AssemblyVersion": "1.0.0.5",
+	"AssemblyVersion": "1.0.0.6",
 	"RepoUrl": "https://github.com/priprii/FFXIVGamblePyon",
 	"ApplicableVersion": "any",
 	"CategoryTags": [ "minigames" ],
 	"Tags": [ "blackjack", "gamble", "pyon" ],
-	"DalamudApiLevel": 7,
+	"DalamudApiLevel": 8,
 	"IconUrl": "",
 	"ImageUrls": [ "" ],
 	"DownloadLinkInstall": "https://github.com/priprii/FFXIVGamblePyon/raw/main/bin/GamblePyon.zip",
@@ -18,6 +18,5 @@
 	"IsTestingExclusive": false,
 	"DownloadLinkTesting": "https://github.com/priprii/FFXIVGamblePyon/raw/main/bin/GamblePyon.zip",
 	"DownloadLinkUpdate": "https://github.com/priprii/FFXIVGamblePyon/raw/main/bin/GamblePyon.zip",
-	"DownloadCount": 0,
-	"LastUpdated": "1668389634"
+	"DownloadCount": 0
 }]
