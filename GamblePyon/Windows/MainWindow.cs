@@ -95,7 +95,7 @@ namespace GamblePyon {
             }
 
             if(QueuedMessages.Count > 0) {
-                GamblePyon.XIVCommon.Functions.Chat.SendMessage(QueuedMessages[0]);
+                GamblePyon.Chat.SendMessage(QueuedMessages[0]);
                 QueuedMessages.RemoveAt(0);
             }
 

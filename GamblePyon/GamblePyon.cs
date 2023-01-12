@@ -6,7 +6,6 @@ using Dalamud.Game.Gui;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
-using XivCommon;
 
 namespace GamblePyon {
     public sealed class GamblePyon : IDalamudPlugin {
@@ -23,7 +22,7 @@ namespace GamblePyon {
         private WindowSystem Windows;
         private static MainWindow MainWindow;
 
-        public static XivCommonBase XIVCommon;
+        public static Chat Chat;
 
         public GamblePyon() {
             CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand) {
@@ -34,7 +33,7 @@ namespace GamblePyon {
                 MainWindow.IsOpen = true;
             };
 
-            XIVCommon = new XivCommonBase();
+            Chat = new Chat(SigScanner);
             Windows = new WindowSystem(Name);
             MainWindow = new MainWindow(this) { IsOpen = false };
             MainWindow.Config = PluginInterface.GetPluginConfig() as Config ?? new Config();
@@ -51,7 +50,6 @@ namespace GamblePyon {
             ChatGui.ChatMessage -= MainWindow.OnChatMessage;
             MainWindow.Dispose();
             CommandManager.RemoveHandler(CommandName);
-            XIVCommon.Dispose();
         }
 
         private void OnCommand(string command, string args) {
