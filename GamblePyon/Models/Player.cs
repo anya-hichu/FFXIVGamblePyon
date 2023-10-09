@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 
 namespace GamblePyon.Models {
     public class Player {
@@ -12,9 +11,6 @@ namespace GamblePyon.Models {
         public int TotalWinnings = 0;
 
         public BlackjackProps Blackjack = new BlackjackProps();
-
-        private enum ChatNameDisplayTypes { FullName, SurnameAbbrv, ForenameAbbrv, Initials }
-        private unsafe ChatNameDisplayTypes ChatNameDisplayType { get { return (ChatNameDisplayTypes)ConfigModule.Instance()->GetIntValue(ConfigOption.LogNameType); } }
 
         public Player(int id, string name = "", string alias = "") {
             ID = id;
@@ -37,23 +33,8 @@ namespace GamblePyon.Models {
             return name;
         }
 
-        public unsafe string GetNameFromDisplayType(string name) {
-            if(name.Contains(' ')) {
-                var displayType = ChatNameDisplayType;
-
-                if(displayType != ChatNameDisplayTypes.FullName) {
-                    string[] n = name.Split(' ');
-                    switch(displayType) {
-                        case ChatNameDisplayTypes.ForenameAbbrv:
-                            return $"{n[0].Substring(0, 1)}. {n[1]}";
-                        case ChatNameDisplayTypes.SurnameAbbrv:
-                            return $"{n[0]} {n[1].Substring(0, 1)}.";
-                        case ChatNameDisplayTypes.Initials:
-                            return $"{n[0].Substring(0, 1)}. {n[1].Substring(0, 1)}.";
-                    }
-                }
-            }
-
+        public string GetNameFromDisplayType(string name) {
+            /* TODO = Just delete this or fix it later, it used to use the ingame initials settings to apply them but I can't be arsed */
             return name;
         }
 

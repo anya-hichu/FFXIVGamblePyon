@@ -6,6 +6,7 @@ using Dalamud.Game.Gui;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 
 namespace GamblePyon {
     public sealed class GamblePyon : IDalamudPlugin {
@@ -13,11 +14,11 @@ namespace GamblePyon {
         private const string CommandName = "/pyon";
 
         [PluginService] public static DalamudPluginInterface PluginInterface { get; private set; } = null!;
-        [PluginService] public static CommandManager CommandManager { get; private set; } = null!;
-        [PluginService] public static ChatGui ChatGui { get; private set; } = null!;
-        [PluginService] public static ClientState ClientState { get; private set; } = null!;
-        [PluginService] public static ObjectTable Objects { get; private set; } = null!;
-        [PluginService] public static SigScanner SigScanner { get; private set; } = null!;
+        [PluginService] public static ICommandManager CommandManager { get; private set; } = null!;
+        [PluginService] public static IChatGui ChatGui { get; private set; } = null!;
+        [PluginService] public static IClientState ClientState { get; private set; } = null!;
+        [PluginService] public static ISigScanner SigScanner { get; private set; } = null!;
+        [PluginService] public static IPartyList PartyList { get; private set; } = null!;
 
         private WindowSystem Windows;
         private static MainWindow MainWindow;

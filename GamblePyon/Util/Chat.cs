@@ -23,13 +23,13 @@ namespace GamblePyon {
 
         private readonly unsafe delegate* unmanaged<Utf8String*, int, IntPtr, void> _sanitiseString = null!;
 
-        internal Chat(SigScanner scanner) {
-            if(scanner.TryScanText(Signatures.SendChat, out var processChatBoxPtr, "chat sending")) {
+        internal Chat(ISigScanner scanner) {
+            if(scanner.TryScanText(Signatures.SendChat, out var processChatBoxPtr)) {
                 this.ProcessChatBox = Marshal.GetDelegateForFunctionPointer<ProcessChatBoxDelegate>(processChatBoxPtr);
             }
 
             unsafe {
-                if(scanner.TryScanText(Signatures.SanitiseString, out var sanitisePtr, "string sanitiser")) {
+                if(scanner.TryScanText(Signatures.SanitiseString, out var sanitisePtr)) {
                     this._sanitiseString = (delegate* unmanaged<Utf8String*, int, IntPtr, void>)sanitisePtr;
                 }
             }

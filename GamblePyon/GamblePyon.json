@@ -1,0 +1,9 @@
+{
+	"Author": "Pyon, Incalex",
+	"Name": "GamblePyon",
+	"Punchline": "Helper plugin for Blackjack",
+	"Description": "An interface for managing a game of Blackjack.\n/pyon - Open GamblePyon",
+	"InternalName": "GamblePyon",
+	"CategoryTags": [ "minigames" ],
+	"Tags": [ "blackjack", "gamble", "pyon" ]
+}

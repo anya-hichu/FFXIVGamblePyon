@@ -8,6 +8,7 @@ using ImGuiNET;
 using GamblePyon.Extensions;
 using GamblePyon.Models;
 using GamblePyon.Modules;
+using Dalamud.Interface.Utility;
 
 namespace GamblePyon {
     public class MainWindow : Window {
@@ -32,7 +33,7 @@ namespace GamblePyon {
 
         public void Dispose() {
             Blackjack?.Dispose();
-            PlayerManager?.Dispose();
+            //PlayerManager?.Dispose();
         }
 
         public override void OnOpen() {

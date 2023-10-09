@@ -7,6 +7,7 @@ using Dalamud.Logging;
 using ImGuiNET;
 using GamblePyon.Extensions;
 using GamblePyon.Models;
+using Dalamud.Interface.Utility;
 
 namespace GamblePyon.Modules {
     public class Blackjack {
