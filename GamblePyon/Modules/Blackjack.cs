@@ -1,12 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using Dalamud.Interface;
 using Dalamud.Interface.Colors;
-using Dalamud.Logging;
 using ImGuiNET;
 using GamblePyon.Extensions;
 using GamblePyon.Models;
+using GlamblePyon.model;
 using Dalamud.Interface.Utility;
 
 namespace GamblePyon.Modules {
@@ -47,8 +46,8 @@ namespace GamblePyon.Modules {
 
         public void Initialize() {
             Dealer = new Player(0);
-            Dealer.Name = Dealer.GetNameFromDisplayType(GamblePyon.ClientState.LocalPlayer?.Name.TextValue ?? "");
-            Dealer.Alias = Dealer.GetAlias(GamblePyon.ClientState.LocalPlayer?.Name.TextValue ?? "", Config.AutoNameMode);
+            Dealer.Name = Dealer.GetNameFromDisplayType(Plugin.ClientState.LocalPlayer?.Name.TextValue ?? "");
+            Dealer.Alias = Dealer.GetAlias(Plugin.ClientState.LocalPlayer?.Name.TextValue ?? "", Config.AutoNameMode);
             InitializePlayers();
         }
 
@@ -67,9 +66,9 @@ namespace GamblePyon.Modules {
 
         public void ResetRound() {
             EndRound();
-            Dealer.Reset();
+            Dealer!.Reset();
 
-            foreach(Player player in Players) {
+            foreach(var player in Players!) {
                 player.Reset();
             }
         }
@@ -78,7 +77,7 @@ namespace GamblePyon.Modules {
             CurrentEvent = Event.PlaceBets;
         }
 
-        private string FormatMessage(string message, Player player, Hand hand = null) {
+        private string FormatMessage(string message, Player player, Hand? hand = null) {
             if(string.IsNullOrWhiteSpace(message)) { return ""; }
 
             return message.Replace("#dealer#", player.Alias)
@@ -117,21 +116,21 @@ namespace GamblePyon.Modules {
             if(!Enabled) { return; }
 
             try {
-                if((Config.RollCommand == "/dice" && sender.ToLower().Contains(Dealer.Name.ToLower()) && message.Contains("Random! (1-13)")) || (Config.RollCommand == "/random" && message.Contains("You roll a") && message.Contains("out of 13"))) {
+                if((Config.RollCommand == "/dice" && sender.ToLower().Contains(Dealer!.Name.ToLower()) && message.Contains("Random! (1-13)")) || (Config.RollCommand == "/random" && message.Contains("You roll a") && message.Contains("out of 13"))) {
                     if(CurrentAction == Action.DealerDraw1) {
                         CurrentAction = Action.None;
 
                         string cardValue = Config.RollCommand == "/dice" ? message.Replace("Random! (1-13) ", "") : Regex.Replace(message, ".*You roll a ([^\\(]+)\\(.*", "$1", RegexOptions.Singleline).Trim();
-                        Dealer.Blackjack.Hands[0].Cards.Add(new Card(int.Parse(cardValue), Config.Blackjack.ShowSuit));
+                        Dealer!.Blackjack.Hands[0].Cards.Add(new Card(int.Parse(cardValue), Config.Blackjack.ShowSuit));
 
                         SendMessage($"{FormatMessage(Config.Blackjack.Messages["DealerDraw1"], Dealer)}");
                     } else if(CurrentAction == Action.DealerDraw2) {
                         CurrentAction = Action.None;
 
-                        string cardValue = Config.RollCommand == "/dice" ? message.Replace("Random! (1-13) ", "") : Regex.Replace(message, ".*You roll a ([^\\(]+)\\(.*", "$1", RegexOptions.Singleline).Trim();
-                        Dealer.Blackjack.Hands[0].Cards.Add(new Card(int.Parse(cardValue), Config.Blackjack.ShowSuit));
+                        var cardValue = Config.RollCommand == "/dice" ? message.Replace("Random! (1-13) ", "") : Regex.Replace(message, ".*You roll a ([^\\(]+)\\(.*", "$1", RegexOptions.Singleline).Trim();
+                        Dealer!.Blackjack.Hands[0].Cards.Add(new Card(int.Parse(cardValue), Config.Blackjack.ShowSuit));
 
-                        int value = Dealer.Blackjack.Hands[0].GetIntValue();
+                        var value = Dealer.Blackjack.Hands[0].GetIntValue();
                         if(value == 21) {
                             SendMessage($"{FormatMessage(Config.Blackjack.Messages["DealerDraw2Blackjack"], Dealer)}");
                         } else if(Config.Blackjack.DealerStandMode != DealerStandMode.None && value >= GetStandValue()) {
@@ -144,10 +143,10 @@ namespace GamblePyon.Modules {
                     } else if(CurrentAction == Action.DealerHit) {
                         CurrentAction = Action.None;
 
-                        string cardValue = Config.RollCommand == "/dice" ? message.Replace("Random! (1-13) ", "") : Regex.Replace(message, ".*You roll a ([^\\(]+)\\(.*", "$1", RegexOptions.Singleline).Trim();
-                        Dealer.Blackjack.Hands[0].Cards.Add(new Card(int.Parse(cardValue), Config.Blackjack.ShowSuit));
+                        var cardValue = Config.RollCommand == "/dice" ? message.Replace("Random! (1-13) ", "") : Regex.Replace(message, ".*You roll a ([^\\(]+)\\(.*", "$1", RegexOptions.Singleline).Trim();
+                        Dealer!.Blackjack.Hands[0].Cards.Add(new Card(int.Parse(cardValue), Config.Blackjack.ShowSuit));
 
-                        int value = Dealer.Blackjack.Hands[0].GetIntValue();
+                        var value = Dealer.Blackjack.Hands[0].GetIntValue();
                         if(value == 21) {
                             SendMessage($"{FormatMessage(Config.Blackjack.Messages["DealerHit21"], Dealer)}");
                         } else if(Config.Blackjack.DealerStandMode != DealerStandMode.None && value >= GetStandValue() && value < 21) {
@@ -161,7 +160,7 @@ namespace GamblePyon.Modules {
                         }
                     } else if(CurrentAction == Action.PlayerDraw2) {
                         if(CurrentPlayer != null && CurrentHand != null) {
-                            string cardValue = Config.RollCommand == "/dice" ? message.Replace("Random! (1-13) ", "") : Regex.Replace(message, ".*You roll a ([^\\(]+)\\(.*", "$1", RegexOptions.Singleline).Trim();
+                            var cardValue = Config.RollCommand == "/dice" ? message.Replace("Random! (1-13) ", "") : Regex.Replace(message, ".*You roll a ([^\\(]+)\\(.*", "$1", RegexOptions.Singleline).Trim();
                             CurrentHand.Cards.Add(new Card(int.Parse(cardValue), Config.Blackjack.ShowSuit));
 
                             if(CurrentHand.Cards.Count == 2) {
@@ -182,10 +181,10 @@ namespace GamblePyon.Modules {
                         CurrentAction = Action.None;
 
                         if(CurrentPlayer != null && CurrentHand != null) {
-                            string cardValue = Config.RollCommand == "/dice" ? message.Replace("Random! (1-13) ", "") : Regex.Replace(message, ".*You roll a ([^\\(]+)\\(.*", "$1", RegexOptions.Singleline).Trim();
+                            var cardValue = Config.RollCommand == "/dice" ? message.Replace("Random! (1-13) ", "") : Regex.Replace(message, ".*You roll a ([^\\(]+)\\(.*", "$1", RegexOptions.Singleline).Trim();
                             CurrentHand.Cards.Add(new Card(int.Parse(cardValue), Config.Blackjack.ShowSuit));
 
-                            int value = CurrentHand.GetIntValue();
+                            var value = CurrentHand.GetIntValue();
                             if(value == 21) {
                                 SendMessage($"{FormatMessage(Config.Blackjack.Messages["PlayerHit21"], CurrentPlayer, CurrentHand)}");
                             } else if(value < 21) {
@@ -204,7 +203,7 @@ namespace GamblePyon.Modules {
                     }
                 }
             } catch(Exception ex) {
-                PluginLog.Warning($"Error while parsing Chat Message: {ex}");
+                Plugin.Log.Warning($"Error while parsing Chat Message: {ex}");
             }
         }
 
@@ -220,11 +219,11 @@ namespace GamblePyon.Modules {
         }
 
         private bool DealerCanHit() {
-            return (Config.Blackjack.DealerStandMode == DealerStandMode.None && Dealer.Blackjack.Hands[0].GetIntValue() < 21) || (Config.Blackjack.DealerStandMode != DealerStandMode.None && Dealer.Blackjack.Hands[0].GetIntValue() < GetStandValue());
+            return (Config.Blackjack.DealerStandMode == DealerStandMode.None && Dealer!.Blackjack.Hands[0].GetIntValue() < 21) || (Config.Blackjack.DealerStandMode != DealerStandMode.None && Dealer!.Blackjack.Hands[0].GetIntValue() < GetStandValue());
         }
 
         private bool DealerSafe() {
-            return Dealer.Blackjack.Hands[0].GetIntValue() <= 21 && (Config.Blackjack.DealerStandMode == DealerStandMode.None || (Config.Blackjack.DealerStandMode != DealerStandMode.None && Dealer.Blackjack.Hands[0].GetIntValue() >= GetStandValue()));
+            return Dealer!.Blackjack.Hands[0].GetIntValue() <= 21 && (Config.Blackjack.DealerStandMode == DealerStandMode.None || (Config.Blackjack.DealerStandMode != DealerStandMode.None && Dealer.Blackjack.Hands[0].GetIntValue() >= GetStandValue()));
         }
 
         public void DrawSubTabs() {
@@ -300,7 +299,7 @@ namespace GamblePyon.Modules {
             ImGui.Checkbox("Enabled", ref Enabled);
             if(ImGui.IsItemHovered()) { ImGui.SetTooltip("Must first enable this option for the plugin to function.\nShould disable it while not doing a blackjack round to prevent unnecessary dice roll & object monitoring."); }
             ImGui.NextColumn();
-            Dealer.Name = Dealer.GetNameFromDisplayType(GamblePyon.ClientState.LocalPlayer?.Name.TextValue ?? "");
+            Dealer!.Name = Dealer.GetNameFromDisplayType(Plugin.ClientState.LocalPlayer?.Name.TextValue ?? "");
             ImGui.TextColored(ImGuiColors.DalamudGrey, $"Dealer Name: {Dealer.Name}");
             if(ImGui.IsItemHovered()) { ImGui.SetTooltip("This is you! ..Or at least it should be.\nI dunno what would happen if it's not."); }
 
@@ -365,7 +364,7 @@ namespace GamblePyon.Modules {
             //Bet
             ImGui.SetNextItemWidth(-1);
             int totalBet = 0;
-            foreach(Player player in Players) {
+            foreach(Player player in Players!) {
                 if(string.IsNullOrWhiteSpace(player.Alias)) { continue; }
                 totalBet += player.TotalBet;
             }
@@ -492,8 +491,8 @@ namespace GamblePyon.Modules {
             ImGui.Text("Profit");
             ImGui.NextColumn();
 
-            foreach(Player player in Players) {
-                foreach(Hand hand in player.Blackjack.Hands) {
+            foreach(var player in Players!) {
+                foreach(var hand in player.Blackjack.Hands) {
                     int handIndex = player.Blackjack.Hands.IndexOf(hand);
                     ImGui.Separator();
                     ImGui.PushID($"player_{player.ID}-{player.Blackjack.Hands.IndexOf(hand)}");
@@ -566,7 +565,7 @@ namespace GamblePyon.Modules {
                         }
                     }
 
-                    if(Enabled && !string.IsNullOrWhiteSpace(player.Alias) && !hand.Doubled && Dealer.Blackjack.Hands[0].Cards.Count == 1 && hand.Cards.Count == 2 && hand.GetIntValue() < 21 && (!player.Blackjack.IsPush || (player.Blackjack.IsPush && Config.Blackjack.PushAllowDouble))) {
+                    if(Enabled && !string.IsNullOrWhiteSpace(player.Alias) && !hand.Doubled && Dealer!.Blackjack.Hands[0].Cards.Count == 1 && hand.Cards.Count == 2 && hand.GetIntValue() < 21 && (!player.Blackjack.IsPush || (player.Blackjack.IsPush && Config.Blackjack.PushAllowDouble))) {
                         ImGui.SameLine();
                         if(ImGui.Button("D###doubleBet")) {
                             hand.Doubled = true;
@@ -579,7 +578,7 @@ namespace GamblePyon.Modules {
                         }
                     }
 
-                    if(Enabled && !string.IsNullOrWhiteSpace(player.Alias) && Config.Blackjack.AllowSplit && handIndex == 0 && hand.Cards.Count == 2 && Dealer.Blackjack.Hands[0].Cards.Count == 1 && player.Blackjack.Hands.Count == 1 && hand.Cards[0].TextNoSuit == hand.Cards[1].TextNoSuit && hand.GetIntValue() < 21) {
+                    if(Enabled && !string.IsNullOrWhiteSpace(player.Alias) && Config.Blackjack.AllowSplit && handIndex == 0 && hand.Cards.Count == 2 && Dealer!.Blackjack.Hands[0].Cards.Count == 1 && player.Blackjack.Hands.Count == 1 && hand.Cards[0].TextNoSuit == hand.Cards[1].TextNoSuit && hand.GetIntValue() < 21) {
                         ImGui.SameLine();
                         if(ImGui.Button("S###splitCards")) {
                             player.Blackjack.Hands.Add(new Hand() { Cards = new List<Card>() { hand.Cards[1] } });
@@ -611,7 +610,7 @@ namespace GamblePyon.Modules {
                             if(ImGui.IsItemHovered()) {
                                 ImGui.SetTooltip(hoverMsg);
                             }
-                        } else if(hand.GetIntValue() < 21 && Dealer.Blackjack.Hands[0].Cards.Count > 0 && (!hand.Doubled || !hand.DoubleHit)) {
+                        } else if(hand.GetIntValue() < 21 && Dealer!.Blackjack.Hands[0].Cards.Count > 0 && (!hand.Doubled || !hand.DoubleHit)) {
                             btnId = "?";
                             string dblMsg = (!player.Blackjack.IsPush || Config.Blackjack.PushAllowDouble ? "/Double" : "");
                             string spltMsg = Config.Blackjack.AllowSplit && handIndex == 0 && player.Blackjack.Hands.Count == 1 && hand.Cards[0].TextNoSuit == hand.Cards[1].TextNoSuit && hand.GetIntValue() < 21 ? "/Split" : "";
@@ -664,7 +663,7 @@ namespace GamblePyon.Modules {
 
                     //Result Actions
                     ImGui.SetNextItemWidth(-1);
-                    if(Enabled && !string.IsNullOrWhiteSpace(player.Alias) && handIndex == 0 && player.TotalBet > 0 && Dealer.Blackjack.Hands[0].Cards.Count >= 2 && player.Blackjack.Hands.Find(x => x.Cards.Count < 2) == null) {
+                    if(Enabled && !string.IsNullOrWhiteSpace(player.Alias) && handIndex == 0 && player.TotalBet > 0 && Dealer!.Blackjack.Hands[0].Cards.Count >= 2 && player.Blackjack.Hands.Find(x => x.Cards.Count < 2) == null) {
                         int dealerValue = Dealer.Blackjack.Hands[0].GetIntValue();
                         if(Config.Blackjack.DealerStandMode == DealerStandMode.None || dealerValue >= GetStandValue()) {
                             int h1Result = 0;

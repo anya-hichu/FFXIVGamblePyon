@@ -1,9 +1,17 @@
 {
-	"Author": "Pyon, Incalex",
-	"Name": "GamblePyon",
-	"Punchline": "Helper plugin for Blackjack",
-	"Description": "An interface for managing a game of Blackjack.\n/pyon - Open GamblePyon",
-	"InternalName": "GamblePyon",
-	"CategoryTags": [ "minigames" ],
-	"Tags": [ "blackjack", "gamble", "pyon" ]
+  "Author": "Pyon",
+  "Name": "GamblePyon",
+  "Punchline": "Helper plugin for Blackjack",
+  "Description": "An interface for managing a game of Blackjack.\n/pyon - Open GamblePyon",
+  "ApplicableVersion": "any",
+  "Tags": [
+    "blackjack",
+    "gamble",
+    "pyon"
+  ],
+  "RepoUrl": "https://github.com/anya-hichu/FFXIVGamblePyon",
+  "IconUrl": "https://raw.githubusercontent.com/anya-hichu/FFXIVGamblePyon/main/images/icon.png",
+  "ImageUrls": [
+    ""
+  ]
 }

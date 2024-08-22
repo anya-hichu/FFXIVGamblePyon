@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Numerics;
 using Dalamud.Game.Text;
 using Dalamud.Interface;
@@ -6,22 +6,24 @@ using Dalamud.Interface.Colors;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using GamblePyon.Extensions;
-using GamblePyon.Models;
-using GamblePyon.Modules;
+using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Interface.Utility;
+using GlamblePyon.model;
 
 namespace GamblePyon {
     public class MainWindow : Window {
-        private readonly GamblePyon plugin;
-        public static Config Config { get; set; }
+        private readonly Plugin plugin;
+        public static Config Config { get; set; } = null!;
 
-        private MainTab CurrentMainTab = MainTab.Blackjack;
+        private MainTab CurrentMainTab { get; set; } = MainTab.Blackjack;
 
-        public PlayerManager PlayerManager;
-        public Blackjack Blackjack;
-        public Player Dealer;
+        public PlayerManager PlayerManager { get; private set; } = null!;
+        public Blackjack Blackjack { get; private set; } = null!;
+        public Player Dealer { get; private set; } = null!;
 
-        public MainWindow(GamblePyon plugin) : base("GamblePyon") {
+        private List<string> QueuedMessages { get; set; } = [];
+
+        public MainWindow(Plugin plugin) : base("GamblePyon") {
             this.SizeCondition = ImGuiCond.Appearing;
             this.Size = new Vector2(670, 500) * ImGuiHelpers.GlobalScale;
             this.plugin = plugin;
@@ -33,7 +35,6 @@ namespace GamblePyon {
 
         public void Dispose() {
             Blackjack?.Dispose();
-            //PlayerManager?.Dispose();
         }
 
         public override void OnOpen() {
@@ -43,7 +44,7 @@ namespace GamblePyon {
         public void Close_Window(object? sender, System.EventArgs e) => IsOpen = false;
         public void Send_Message(object? sender, MessageEventArgs e) => SendMessage(e.Message, e.MessageType, e.ModuleTab);
 
-        private List<string> QueuedMessages = new List<string>();
+        
         private void SendMessage(string message, MessageType messageType, MainTab moduleTab) {
             if(!string.IsNullOrWhiteSpace(message)) {
                 if(messageType == MessageType.Normal) {
@@ -54,7 +55,7 @@ namespace GamblePyon {
                     if(Config.Debug) {
                         string n = (new System.Random().Next(num == 0 ? Config.Blackjack.MaxRoll : num) + 1).ToString();
                         string s = Config.ChatChannel == "/p" ? $"Random! (1-{num}) {n}" : $"Random! You roll a {n} (out of {num}).";
-                        ReceivedMessage(Blackjack.Dealer.Name, s);
+                        ReceivedMessage(Blackjack.Dealer!.Name, s);
                     } else {
                         QueuedMessages.Add($"{Config.RollCommand} {(num == 0 ? Config.Blackjack.MaxRoll : num)}");
                     }
@@ -62,7 +63,7 @@ namespace GamblePyon {
             }
         }
 
-        public void OnChatMessage(XivChatType type, uint senderId, ref Dalamud.Game.Text.SeStringHandling.SeString sender, ref Dalamud.Game.Text.SeStringHandling.SeString message, ref bool isHandled) {
+        public void OnChatMessage(XivChatType type, int timestamp, ref SeString sender, ref SeString message, ref bool isHandled) {
             if(isHandled) { return; }
 
             ReceivedMessage(sender.TextValue, message.TextValue);
@@ -96,7 +97,7 @@ namespace GamblePyon {
             }
 
             if(QueuedMessages.Count > 0) {
-                GamblePyon.Chat.SendMessage(QueuedMessages[0]);
+                Plugin.Chat.SendMessage(QueuedMessages[0]);
                 QueuedMessages.RemoveAt(0);
             }
 
@@ -106,7 +107,7 @@ namespace GamblePyon {
                         PlayerManager = new PlayerManager();
                     }
 
-                    PlayerManager.UpdateParty(ref Blackjack.Players, GamblePyon.ClientState.LocalPlayer.Name.TextValue, Config.AutoNameMode);
+                    PlayerManager.UpdateParty(ref Blackjack.Players, Plugin.ClientState.LocalPlayer!.Name.TextValue, Config.AutoNameMode);
                 }
             }
         }

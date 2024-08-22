@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Dalamud.Configuration;
 using Dalamud.Plugin;
 
@@ -17,9 +17,9 @@ namespace GamblePyon {
 
         public BlackjackConfig Blackjack { get; set; } = new BlackjackConfig();
 
-        [NonSerialized] private DalamudPluginInterface? PluginInterface;
+        [NonSerialized] private IDalamudPluginInterface? PluginInterface;
 
-        public void Initialize(DalamudPluginInterface pluginInterface) {
+        public void Initialize(IDalamudPluginInterface pluginInterface) {
             PluginInterface = pluginInterface;
         }
 

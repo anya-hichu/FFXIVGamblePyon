@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Runtime.InteropServices;
 using System.Text;
 using Dalamud.Game;
@@ -14,7 +13,7 @@ namespace GamblePyon {
     public class Chat {
         private static class Signatures {
             internal const string SendChat = "48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9";
-            internal const string SanitiseString = "E8 ?? ?? ?? ?? EB 0A 48 8D 4C 24 ?? E8 ?? ?? ?? ?? 48 8D 8D";
+            internal const string SanitiseString = "E8 ?? ?? ?? ?? EB ?? 48 8D 4C 24 ?? E8 ?? ?? ?? ?? 48 8D AE";
         }
 
         private delegate void ProcessChatBoxDelegate(IntPtr uiModule, IntPtr message, IntPtr unused, byte a4);
@@ -53,7 +52,7 @@ namespace GamblePyon {
                 throw new InvalidOperationException("Could not find signature for chat sending");
             }
 
-            var uiModule = (IntPtr)Framework.Instance()->GetUiModule();
+            var uiModule = (IntPtr)Framework.Instance()->GetUIModule();
 
             using var payload = new ChatPayload(message);
             var mem1 = Marshal.AllocHGlobal(400);
@@ -150,30 +149,6 @@ namespace GamblePyon {
 
             public void Dispose() {
                 Marshal.FreeHGlobal(this.textPtr);
-            }
-        }
-    }
-
-    internal static class SigScannerExt {
-        /// <summary>
-        /// Scan for a signature in memory.
-        /// </summary>
-        /// <param name="scanner">SigScanner to use for scanning</param>
-        /// <param name="sig">signature to search for</param>
-        /// <param name="result">pointer where signature was found or <see cref="IntPtr.Zero"/> if not found</param>
-        /// <param name="name">name of this signature - if specified, a warning will be printed if the signature could not be found</param>
-        /// <returns>true if signature was found</returns>
-        internal static bool TryScanText(this SigScanner scanner, string sig, out IntPtr result, string? name = null) {
-            result = IntPtr.Zero;
-            try {
-                result = scanner.ScanText(sig);
-                return true;
-            } catch(KeyNotFoundException) {
-                if(name != null) {
-                    Dalamud.Logging.PluginLog.LogWarning($"Could not find signature for {name}. This functionality will be disabled.");
-                }
-
-                return false;
             }
         }
     }
