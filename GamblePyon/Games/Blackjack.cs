@@ -81,8 +81,8 @@ public class Blackjack
     public void Initialize()
     {
         Dealer = new Player(0);
-        Dealer.Name = Dealer.GetNameFromDisplayType(global::GamblePyon.Plugin.ClientState.LocalPlayer?.Name.TextValue ?? "");
-        Dealer.Alias = Dealer.GetAlias(global::GamblePyon.Plugin.ClientState.LocalPlayer?.Name.TextValue ?? "", Config.AutoNameMode);
+        Dealer.Name = Dealer.GetNameFromDisplayType(Plugin.ClientState.LocalPlayer?.Name.TextValue ?? "");
+        Dealer.Alias = Dealer.GetAlias(Plugin.ClientState.LocalPlayer?.Name.TextValue ?? "", Config.AutoNameMode);
         InitializePlayers();
     }
 

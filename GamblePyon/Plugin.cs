@@ -20,6 +20,7 @@ namespace GamblePyon
         [PluginService] public static ISigScanner SigScanner { get; private set; } = null!;
         [PluginService] public static IPartyList PartyList { get; private set; } = null!;
         [PluginService] public static IPluginLog Log { get; private set; } = null!;
+        [PluginService] public static IFramework Framework { get; private set; } = null!;
 
         private WindowSystem Windows { get; init; }
         private static MainWindow MainWindow = null!;
@@ -42,8 +43,10 @@ namespace GamblePyon
             MainWindow.Config = PluginInterface.GetPluginConfig() as Config ?? new Config();
             MainWindow.Config.Initialize(PluginInterface);
             Windows.AddWindow(MainWindow);
-            MainWindow.Initialize();
-
+            Framework.RunOnFrameworkThread(() =>
+            {
+                MainWindow.Initialize();
+            });
             PluginInterface.UiBuilder.Draw += Windows.Draw;
             ChatGui.ChatMessage += MainWindow.OnChatMessage;
         }

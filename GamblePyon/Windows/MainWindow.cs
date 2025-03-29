@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Numerics;
 using Dalamud.Game.Text;
-using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
