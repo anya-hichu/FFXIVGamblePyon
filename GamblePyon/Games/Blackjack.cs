@@ -11,7 +11,7 @@ using GamblePyon;
 using GamblePyon.Extensions;
 using GamblePyon.Models;
 using GlamblePyon.model;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 public class Blackjack
 {
@@ -461,7 +461,7 @@ public class Blackjack
         }
         ImGui.NextColumn();
         ImGui.SetNextItemWidth(-1f);
-        ImGui.InputText("###dealerAlias", ref Dealer.Alias, 255u);
+        ImGui.InputText("###dealerAlias", ref Dealer.Alias);
         if (ImGui.IsItemHovered())
         {
             ImGui.SetTooltip("A name to refer to the dealer by, does not need to be your full name.\nThis should be set automatically, but you can change it if you want a cooler name.");
@@ -658,7 +658,7 @@ public class Blackjack
                 ImGui.SetNextItemWidth(-1f);
                 if (handIndex == 0)
                 {
-                    ImGui.InputText("###playerAlias", ref player.Alias, 255u);
+                    ImGui.InputText("###playerAlias", ref player.Alias);
                     if (ImGui.IsItemHovered())
                     {
                         ImGui.SetTooltip("A name to refer to this player by, does not need to be their full name.\nLeave blank if the seat is free.\nYou do not need to touch this if 'Auto Party' is enabled.. you can if you REALLY want to though.");
@@ -1089,7 +1089,7 @@ public class Blackjack
         ImGui.Separator();
         ImGui.SetNextItemWidth(-1f);
         string msg = Config.Blackjack.Messages_Rules["Title"];
-        ImGui.InputText("###Title", ref msg, 255u);
+        ImGui.InputText("###Title", ref msg);
         Config.Blackjack.Messages_Rules["Title"] = msg;
         if (ImGui.IsItemHovered())
         {
@@ -1102,7 +1102,7 @@ public class Blackjack
         ImGui.Separator();
         ImGui.SetNextItemWidth(-1f);
         msg = Config.Blackjack.Messages_Rules["BetLimit"];
-        ImGui.InputText("###BetLimit", ref msg, 255u);
+        ImGui.InputText("###BetLimit", ref msg);
         Config.Blackjack.Messages_Rules["BetLimit"] = msg;
         if (ImGui.IsItemHovered())
         {
@@ -1115,7 +1115,7 @@ public class Blackjack
         ImGui.Separator();
         ImGui.SetNextItemWidth(-1f);
         msg = Config.Blackjack.Messages_Rules["NormWin"];
-        ImGui.InputText("###NormWin", ref msg, 255u);
+        ImGui.InputText("###NormWin", ref msg);
         Config.Blackjack.Messages_Rules["NormWin"] = msg;
         if (ImGui.IsItemHovered())
         {
@@ -1128,7 +1128,7 @@ public class Blackjack
         ImGui.Separator();
         ImGui.SetNextItemWidth(-1f);
         msg = Config.Blackjack.Messages_Rules["BJWin_True"];
-        ImGui.InputText("###BJWin_True", ref msg, 255u);
+        ImGui.InputText("###BJWin_True", ref msg);
         Config.Blackjack.Messages_Rules["BJWin_True"] = msg;
         if (ImGui.IsItemHovered())
         {
@@ -1137,7 +1137,7 @@ public class Blackjack
         ImGui.NextColumn();
         ImGui.SetNextItemWidth(-1f);
         msg = Config.Blackjack.Messages_Rules["BJWin_False"];
-        ImGui.InputText("###BJWin_False", ref msg, 255u);
+        ImGui.InputText("###BJWin_False", ref msg);
         Config.Blackjack.Messages_Rules["BJWin_False"] = msg;
         if (ImGui.IsItemHovered())
         {
@@ -1147,7 +1147,7 @@ public class Blackjack
         ImGui.Separator();
         ImGui.SetNextItemWidth(-1f);
         msg = Config.Blackjack.Messages_Rules["DealerStand_True"];
-        ImGui.InputText("###DealerStand_True", ref msg, 255u);
+        ImGui.InputText("###DealerStand_True", ref msg);
         Config.Blackjack.Messages_Rules["DealerStand_True"] = msg;
         if (ImGui.IsItemHovered())
         {
@@ -1156,7 +1156,7 @@ public class Blackjack
         ImGui.NextColumn();
         ImGui.SetNextItemWidth(-1f);
         msg = Config.Blackjack.Messages_Rules["DealerStand_False"];
-        ImGui.InputText("###DealerStand_False", ref msg, 255u);
+        ImGui.InputText("###DealerStand_False", ref msg);
         Config.Blackjack.Messages_Rules["DealerStand_False"] = msg;
         if (ImGui.IsItemHovered())
         {
@@ -1166,7 +1166,7 @@ public class Blackjack
         ImGui.Separator();
         ImGui.SetNextItemWidth(-1f);
         msg = Config.Blackjack.Messages_Rules["DoubleMustHit_True"];
-        ImGui.InputText("###DoubleMustHit_True", ref msg, 255u);
+        ImGui.InputText("###DoubleMustHit_True", ref msg);
         Config.Blackjack.Messages_Rules["DoubleMustHit_True"] = msg;
         if (ImGui.IsItemHovered())
         {
@@ -1175,7 +1175,7 @@ public class Blackjack
         ImGui.NextColumn();
         ImGui.SetNextItemWidth(-1f);
         msg = Config.Blackjack.Messages_Rules["DoubleMustHit_False"];
-        ImGui.InputText("###DoubleMustHit_False", ref msg, 255u);
+        ImGui.InputText("###DoubleMustHit_False", ref msg);
         Config.Blackjack.Messages_Rules["DoubleMustHit_False"] = msg;
         if (ImGui.IsItemHovered())
         {
@@ -1185,7 +1185,7 @@ public class Blackjack
         ImGui.Separator();
         ImGui.SetNextItemWidth(-1f);
         msg = Config.Blackjack.Messages_Rules["AllowSplit_True"];
-        ImGui.InputText("###AllowSplit_True", ref msg, 255u);
+        ImGui.InputText("###AllowSplit_True", ref msg);
         Config.Blackjack.Messages_Rules["AllowSplit_True"] = msg;
         if (ImGui.IsItemHovered())
         {
@@ -1194,7 +1194,7 @@ public class Blackjack
         ImGui.NextColumn();
         ImGui.SetNextItemWidth(-1f);
         msg = Config.Blackjack.Messages_Rules["AllowSplit_False"];
-        ImGui.InputText("###AllowSplit_False", ref msg, 255u);
+        ImGui.InputText("###AllowSplit_False", ref msg);
         Config.Blackjack.Messages_Rules["AllowSplit_False"] = msg;
         if (ImGui.IsItemHovered())
         {
@@ -1204,7 +1204,7 @@ public class Blackjack
         ImGui.Separator();
         ImGui.SetNextItemWidth(-1f);
         msg = Config.Blackjack.Messages_Rules["PushAllowBet_True"];
-        ImGui.InputText("###PushAllowBet_True", ref msg, 255u);
+        ImGui.InputText("###PushAllowBet_True", ref msg);
         Config.Blackjack.Messages_Rules["PushAllowBet_True"] = msg;
         if (ImGui.IsItemHovered())
         {
@@ -1213,7 +1213,7 @@ public class Blackjack
         ImGui.NextColumn();
         ImGui.SetNextItemWidth(-1f);
         msg = Config.Blackjack.Messages_Rules["PushAllowBet_False"];
-        ImGui.InputText("###PushAllowBet_False", ref msg, 255u);
+        ImGui.InputText("###PushAllowBet_False", ref msg);
         Config.Blackjack.Messages_Rules["PushAllowBet_False"] = msg;
         if (ImGui.IsItemHovered())
         {
@@ -1223,7 +1223,7 @@ public class Blackjack
         ImGui.Separator();
         ImGui.SetNextItemWidth(-1f);
         msg = Config.Blackjack.Messages_Rules["PushAllowDouble_True"];
-        ImGui.InputText("###PushAllowDouble_True", ref msg, 255u);
+        ImGui.InputText("###PushAllowDouble_True", ref msg);
         Config.Blackjack.Messages_Rules["PushAllowDouble_True"] = msg;
         if (ImGui.IsItemHovered())
         {
@@ -1232,7 +1232,7 @@ public class Blackjack
         ImGui.NextColumn();
         ImGui.SetNextItemWidth(-1f);
         msg = Config.Blackjack.Messages_Rules["PushAllowDouble_False"];
-        ImGui.InputText("###PushAllowDouble_False", ref msg, 255u);
+        ImGui.InputText("###PushAllowDouble_False", ref msg);
         Config.Blackjack.Messages_Rules["PushAllowDouble_False"] = msg;
         if (ImGui.IsItemHovered())
         {
@@ -1257,14 +1257,14 @@ public class Blackjack
         ImGui.Text("Text");
         ImGui.NextColumn();
         ImGui.Separator();
-        foreach (KeyValuePair<string, string> message in Config.Blackjack.Messages)
+        foreach (var message in Config.Blackjack.Messages)
         {
             ImGui.SetNextItemWidth(-1f);
             ImGui.Text(message.Key);
             ImGui.NextColumn();
             ImGui.SetNextItemWidth(-1f);
             string msg = message.Value;
-            ImGui.InputText("###m" + message.Key, ref msg, 255u);
+            ImGui.InputText("###m" + message.Key, ref msg);
             Config.Blackjack.Messages[message.Key] = msg;
             if (message.Key == "PlayerStandHit")
             {

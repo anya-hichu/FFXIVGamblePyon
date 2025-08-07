@@ -1,11 +1,11 @@
-﻿using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 namespace GamblePyon.Extensions {
     public static class ImGuiEx {
         /// <summary>Extension for converting between string/integer for display & updating of a value.</summary>
-        public static void InputText(string label, ref int value, uint length = 255) {
+        public static void InputText(string label, ref int value) {
             string strVal = value.ToString();
-            ImGui.InputText(label, ref strVal, length);
+            ImGui.InputText(label, ref strVal);
             int.TryParse(strVal, out value);
         }
 

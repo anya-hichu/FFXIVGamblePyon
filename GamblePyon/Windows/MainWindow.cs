@@ -3,7 +3,7 @@ using System.Numerics;
 using Dalamud.Game.Text;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Windowing;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using GamblePyon.Extensions;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Interface.Utility;
