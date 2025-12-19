@@ -46,8 +46,8 @@ namespace GamblePyon.Modules {
 
         public void Initialize() {
             Dealer = new Player(0);
-            Dealer.Name = Dealer.GetNameFromDisplayType(Plugin.ClientState.LocalPlayer?.Name.TextValue ?? "");
-            Dealer.Alias = Dealer.GetAlias(Plugin.ClientState.LocalPlayer?.Name.TextValue ?? "", Config.AutoNameMode);
+            Dealer.Name = Dealer.GetNameFromDisplayType(Plugin.Objects.LocalPlayer?.Name.TextValue ?? "");
+            Dealer.Alias = Dealer.GetAlias(Plugin.Objects.LocalPlayer?.Name.TextValue ?? "", Config.AutoNameMode);
             InitializePlayers();
         }
 
@@ -299,7 +299,7 @@ namespace GamblePyon.Modules {
             ImGui.Checkbox("Enabled", ref Enabled);
             if(ImGui.IsItemHovered()) { ImGui.SetTooltip("Must first enable this option for the plugin to function.\nShould disable it while not doing a blackjack round to prevent unnecessary dice roll & object monitoring."); }
             ImGui.NextColumn();
-            Dealer!.Name = Dealer.GetNameFromDisplayType(Plugin.ClientState.LocalPlayer?.Name.TextValue ?? "");
+            Dealer!.Name = Dealer.GetNameFromDisplayType(Plugin.Objects.LocalPlayer?.Name.TextValue ?? "");
             ImGui.TextColored(ImGuiColors.DalamudGrey, $"Dealer Name: {Dealer.Name}");
             if(ImGui.IsItemHovered()) { ImGui.SetTooltip("This is you! ..Or at least it should be.\nI dunno what would happen if it's not."); }
 

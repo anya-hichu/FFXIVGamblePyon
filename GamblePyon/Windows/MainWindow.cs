@@ -106,7 +106,7 @@ namespace GamblePyon {
                         PlayerManager = new PlayerManager();
                     }
 
-                    PlayerManager.UpdateParty(ref Blackjack.Players, Plugin.ClientState.LocalPlayer!.Name.TextValue, Config.AutoNameMode);
+                    PlayerManager.UpdateParty(ref Blackjack.Players, Plugin.Objects.LocalPlayer!.Name.TextValue, Config.AutoNameMode);
                 }
             }
         }

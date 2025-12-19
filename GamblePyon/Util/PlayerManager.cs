@@ -27,7 +27,7 @@ public class PlayerManager
             IPartyMember partyMember = Plugin.PartyList.CreatePartyMemberReference(new IntPtr(memberStruct))!;
             if (partyMember != null && !(partyMember.Name.TextValue == dealerName))
             {
-                Player newPlayer = new Player((int)partyMember.ObjectId, partyMember.Name.TextValue);
+                Player newPlayer = new Player((int)partyMember.EntityId, partyMember.Name.TextValue);
                 newPlayer.Alias = newPlayer.GetAlias(nameMode);
                 partyMembers.Add(newPlayer);
             }
